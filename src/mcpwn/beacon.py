@@ -27,6 +27,8 @@ class Beacon:
 
     def __init__(self, on_hit: Callable[[str, dict[str, str]], None]) -> None:
         self._on_hit = on_hit
+        #: Callback failures, kept rather than swallowed so a broken wiring is visible.
+        self.errors: list[str] = []
         self._server: ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
         self.url: str | None = None
@@ -36,13 +38,13 @@ class Beacon:
         beacon = self
 
         class Handler(BaseHTTPRequestHandler):
-            def do_GET(self) -> None:  # noqa: N802 - name fixed by BaseHTTPRequestHandler
+            def do_GET(self) -> None:
                 parts = urlsplit(self.path)
                 params = {k: v[0] for k, v in parse_qs(parts.query).items()}
                 try:
                     beacon._on_hit(parts.path, params)
-                except Exception:  # noqa: BLE001 - a bad callback must not break the fetch
-                    pass
+                except Exception as error:  # noqa: BLE001 - must not break the fetch
+                    beacon.errors.append(repr(error))
                 self.send_response(200)
                 self.send_header("Content-Type", "image/png")
                 self.send_header("Content-Length", str(len(PIXEL)))

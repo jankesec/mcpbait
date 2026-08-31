@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any
 
-import mcp.types as types
+from mcp import types
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
@@ -106,11 +106,15 @@ class ToolRouter:
             return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
         module, _ = route
+        mutated_before = getattr(module, "mutated", None)
         try:
             body = module.respond(call, self.session.ctx)
         except Exception as error:  # noqa: BLE001 - a bad module must not sink the run
             self.session.record("module_error", module.id, {"stage": "respond", "error": repr(error)})
             body = None
+        if getattr(module, "mutated", None) != mutated_before:
+            # The module redefined itself; the next listing will carry the new payload.
+            self.session.record("payload_mutated", module.id, {"tool": name})
         return [types.TextContent(type="text", text=body or GENERIC_RESPONSE)]
 
 
