@@ -1,5 +1,9 @@
 # mcpwn
 
+[![ci](https://github.com/jankesec/mcpwn/actions/workflows/ci.yml/badge.svg)](https://github.com/jankesec/mcpwn/actions/workflows/ci.yml)
+[![python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![licence](https://img.shields.io/badge/licence-Apache--2.0-green)](LICENSE)
+
 **Prove whether an MCP-speaking agent can be hijacked by a malicious server.**
 
 Existing tools prompt a *model* and ask "did it jailbreak?", or scan an MCP server
@@ -143,4 +147,4 @@ test. See [CONTRIBUTING.md](CONTRIBUTING.md). Roughly 40 lines.
 
 ## Licence
 
-Apache-2.0. If mcpwn saved you an incident, [buy me a coffee](https://buymeacoffee.com/CHANGEME).
+Apache-2.0. If mcpwn saved you an incident, [buy me a coffee](https://buymeacoffee.com/sevbandonmez).
