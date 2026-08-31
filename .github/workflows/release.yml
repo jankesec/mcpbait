@@ -1,0 +1,42 @@
+name: release
+
+# Publishes to PyPI when a version tag is pushed, using Trusted Publishing:
+# GitHub proves the workflow's identity to PyPI over OIDC, so there is no API
+# token stored in the repository, in a secret, or pasted anywhere.
+#
+# One-time setup at https://pypi.org/manage/project/mcpbait/settings/publishing/
+# (or https://pypi.org/manage/account/publishing/ before the first release):
+#   Owner: jankesec   Repository: mcpbait
+#   Workflow: release.yml   Environment: pypi
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --all-extras --dev
+      - run: uv run ruff check .
+      - run: uv run pytest -q
+
+  publish:
+    # A tag that fails its own test suite must never reach PyPI: releases cannot
+    # be replaced, only yanked.
+    needs: test
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1
