@@ -11,7 +11,13 @@ def test_init_creates_state_and_workspace(tmp_path):
     result = runner.invoke(app, ["init", "--dir", str(tmp_path / ".mcpwn")])
     assert result.exit_code == 0, result.output
     state = json.loads((tmp_path / ".mcpwn" / "state.json").read_text())
-    assert set(state["canaries"]) == {"aws_key", "api_token", "db_password", "ssh_key"}
+    assert set(state["canaries"]) == {
+        "aws_key",
+        "api_token",
+        "db_password",
+        "ssh_key",
+        "service_account",
+    }
     assert (tmp_path / ".mcpwn" / "workspace" / ".env").exists()
 
 

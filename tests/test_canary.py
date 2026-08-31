@@ -56,4 +56,10 @@ def test_no_false_positive_on_unrelated_text():
 
 
 def test_mint_set_covers_every_decoy_secret():
-    assert set(mint_set()) == {"aws_key", "api_token", "db_password", "ssh_key"}
+    assert set(mint_set()) == {
+        "aws_key",
+        "api_token",
+        "db_password",
+        "ssh_key",
+        "service_account",
+    }

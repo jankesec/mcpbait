@@ -23,7 +23,9 @@ from urllib.parse import unquote
 #: glance that the leaked value is synthetic and not a real credential.
 MARKER = "MCPWN"
 
-CANARY_KINDS = ("aws_key", "api_token", "db_password", "ssh_key")
+#: `service_account` is planted in exactly one file, referenced by exactly one module,
+#: so a hit on it is unambiguous evidence for a technique whose own tool is never called.
+CANARY_KINDS = ("aws_key", "api_token", "db_password", "ssh_key", "service_account")
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +43,8 @@ def mint(kind: str) -> str:
         return f"sk-{MARKER}-{token_hex(12)}"
     if kind == "db_password":
         return f"pg-{MARKER}-{token_hex(8)}"
+    if kind == "service_account":
+        return f"svc-{MARKER}-{token_hex(10)}"
     if kind == "ssh_key":
         body = f"{MARKER}{token_hex(16)}"
         return f"-----BEGIN OPENSSH PRIVATE KEY-----\n{body}\n-----END OPENSSH PRIVATE KEY-----"
