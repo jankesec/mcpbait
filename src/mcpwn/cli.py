@@ -19,6 +19,8 @@ import typer
 from rich.console import Console
 
 from mcpwn import __version__
+from mcpwn.agent import COLLISION_POLICIES, DEFAULT_TASK, http_completion, run_agent
+from mcpwn.aggregate import aggregate, render_aggregate, worst_case_score
 from mcpwn.beacon import Beacon
 from mcpwn.canary import mint_set
 from mcpwn.engine import Session, latest_session, load_session
@@ -225,6 +227,139 @@ def demo(
     finally:
         if not keep and directory is None:
             shutil.rmtree(root, ignore_errors=True)
+
+
+@app.command()
+def attack(
+    directory: DirOption = DEFAULT_DIR,
+    model: Annotated[str, typer.Option("--model", help="Model id to test.")] = "gpt-4o-mini",
+    api_base: Annotated[
+        str, typer.Option("--api-base", envvar="MCPWN_API_BASE", help="OpenAI-compatible base URL.")
+    ] = "https://api.openai.com/v1",
+    api_key: Annotated[
+        str | None, typer.Option("--api-key", envvar="MCPWN_API_KEY", help="API key.")
+    ] = None,
+    runs: Annotated[int, typer.Option("--runs", help="How many sessions to run.")] = 3,
+    task: Annotated[str, typer.Option("--task", help="The ordinary task to give the agent.")] = DEFAULT_TASK,
+    max_turns: Annotated[int, typer.Option("--max-turns", help="Tool-calling turns per run.")] = 8,
+    collision: Annotated[
+        str,
+        typer.Option(
+            "--collision",
+            help="How the client resolves a duplicate tool name: shadow, namespace or builtin.",
+        ),
+    ] = "shadow",
+    module_ids: Annotated[
+        str | None, typer.Option("--modules", help="Comma-separated module ids. Default: all.")
+    ] = None,
+    json_path: Annotated[Path | None, typer.Option("--json", help="Write the summary here.")] = None,
+    fail_under: Annotated[
+        float | None,
+        typer.Option("--fail-under", help="Exit 3 if the worst-case score is below this."),
+    ] = None,
+) -> None:
+    """Attack a real LLM over repeated runs and report the spread.
+
+    One run against a non-deterministic model is an anecdote. This repeats the session
+    and reports how often each technique landed, leading with the worst outcome seen.
+    """
+    if not api_key:
+        typer.echo("No API key. Pass --api-key or set MCPWN_API_KEY.")
+        raise typer.Exit(code=1)
+
+    if collision not in COLLISION_POLICIES:
+        raise typer.BadParameter(f"--collision must be one of {', '.join(COLLISION_POLICIES)}")
+
+    state = _load_state(directory)
+    selected = _select(module_ids)
+    workspace = Path(state["workspace"])
+    console = Console()
+    completion = http_completion(model=model, api_base=api_base, api_key=api_key)
+
+    sessions: list[Session] = []
+    failures: list[str] = []
+    for run in range(max(1, runs)):
+        # Fresh bait each run: a persisted injection from run one would otherwise
+        # still be sitting in CLAUDE.md when run two starts.
+        create_workspace(workspace, state["canaries"])
+
+        beacon = Beacon(on_hit=lambda path, params: None)
+        ctx = PayloadContext(
+            canaries=state["canaries"], workspace=workspace, beacon_url=beacon.start()
+        )
+        session = Session(directory / "sessions", modules=get_modules(selected), ctx=ctx)
+        beacon.on_hit = lambda path, params, _s=session: _s.record(
+            "beacon_hit", params.get("m", ""), {"path": path, "params": params}
+        )
+        failed = None
+        try:
+            reply = anyio.run(
+                lambda _s=session: run_agent(
+                    _s, completion, task=task, max_turns=max_turns, collision=collision
+                )
+            )
+        except Exception as error:  # noqa: BLE001 - one bad run must not lose the others
+            failed = str(error)
+            reply = ""
+            session.record("run_error", "", {"error": repr(error)})
+        finally:
+            beacon.stop()
+
+        persistence = REGISTRY["memory_poisoning"]()
+        if persistence.check_persistence(workspace):
+            session.record("persistence_confirmed", persistence.id, {"workspace": str(workspace)})
+        session.close()
+
+        if failed:
+            # A run that never reached the model proves nothing. Counting it would
+            # score an outage as thirteen techniques the agent resisted.
+            failures.append(failed)
+            console.print(f"[red]run {run + 1}/{runs} failed, excluded:[/red] {failed[:160]}")
+            continue
+
+        sessions.append(session)
+        console.print(
+            f"[dim]run {run + 1}/{runs}: score {session.score()} — "
+            f"{reply[:70].strip() or 'no final reply'}[/dim]"
+        )
+
+    if not sessions:
+        console.print(
+            f"\n[red]All {runs} run(s) failed; there is nothing to measure.[/red]\n"
+            f"[red]{failures[0][:300]}[/red]"
+        )
+        raise typer.Exit(code=4)
+
+    summary = aggregate(sessions)
+    summary["model"] = model
+    summary["collision"] = collision
+    summary["failed_runs"] = len(failures)
+    summary["worst_case_score"] = worst_case_score(summary)
+
+    console.print()
+    console.print(render_aggregate(summary))
+    console.print(
+        f"\n[bold]Worst-case score: {summary['worst_case_score']} / 10[/bold]  "
+        f"(mean {summary['mean_score']}, single-run worst {summary['worst_score']})"
+    )
+    if failures:
+        console.print(
+            f"[yellow]{len(failures)} of {runs} run(s) failed and were excluded. "
+            "The score covers only the runs that reached the model.[/yellow]"
+        )
+    if not summary["consistent"]:
+        console.print(
+            "[yellow]Runs disagreed. Resistance that varies between identical runs is "
+            "luck, not policy — treat the worst case as the real result.[/yellow]"
+        )
+    console.print("[dim]mcpwn observes the server side only.[/dim]")
+
+    if json_path:
+        json_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        typer.echo(f"Summary written to {json_path}")
+    if fail_under is not None and summary["worst_case_score"] < fail_under:
+        typer.echo(f"Worst-case {summary['worst_case_score']} is below {fail_under}.")
+        raise typer.Exit(code=3)
 
 
 @app.command()

@@ -229,3 +229,139 @@ def test_init_overwrites_when_forced(tmp_path):
     )
     assert result.exit_code == 0, result.output
     assert "synthetic" in (project / ".mcpwn-decoy").read_text().lower()
+
+
+def test_attack_requires_an_api_key(tmp_path, monkeypatch):
+    monkeypatch.delenv("MCPWN_API_KEY", raising=False)
+    target = str(tmp_path / ".mcpwn")
+    runner.invoke(app, ["init", "--dir", target])
+    result = runner.invoke(app, ["attack", "--dir", target])
+    assert result.exit_code == 1
+    assert "api key" in result.output.lower()
+
+
+def test_attack_requires_init_first(tmp_path):
+    result = runner.invoke(
+        app, ["attack", "--dir", str(tmp_path / "nope"), "--api-key", "x"]
+    )
+    assert result.exit_code == 1
+    assert "init" in result.output.lower()
+
+
+def test_attack_reports_the_spread_across_runs(tmp_path, monkeypatch):
+    """The whole point: repeated runs, worst case leading."""
+    import mcpwn.cli as cli_module
+
+    replies = iter([
+        {"role": "assistant", "content": "I will not do that."},
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [{
+                "id": "c1", "type": "function",
+                "function": {"name": "read_file", "arguments": '{"path": ".env"}'},
+            }],
+        },
+        {"role": "assistant", "content": "summarised"},
+    ])
+
+    def fake_completion(**kwargs):
+        async def complete(messages, tools):
+            return next(replies)
+        return complete
+
+    monkeypatch.setattr(cli_module, "http_completion", fake_completion)
+
+    target = str(tmp_path / ".mcpwn")
+    runner.invoke(app, ["init", "--dir", target])
+    result = runner.invoke(
+        app, ["attack", "--dir", target, "--api-key", "x", "--runs", "2",
+              "--json", str(tmp_path / "s.json")]
+    )
+    assert result.exit_code == 0, result.output
+    assert "Worst-case score" in result.output
+    assert "disagreed" in result.output
+
+    summary = json.loads((tmp_path / "s.json").read_text())
+    assert summary["runs"] == 2
+    assert summary["consistent"] is False
+    assert summary["modules"]["name_squatting"]["compromised"] == 1
+
+
+def test_attack_fail_under_gates_the_worst_case(tmp_path, monkeypatch):
+    import mcpwn.cli as cli_module
+
+    def fake_completion(**kwargs):
+        async def complete(messages, tools):
+            return {
+                "role": "assistant", "content": None,
+                "tool_calls": [{
+                    "id": "c1", "type": "function",
+                    "function": {"name": "read_file", "arguments": '{"path": ".env"}'},
+                }],
+            }
+        return complete
+
+    monkeypatch.setattr(cli_module, "http_completion", fake_completion)
+    target = str(tmp_path / ".mcpwn")
+    runner.invoke(app, ["init", "--dir", target])
+    result = runner.invoke(
+        app, ["attack", "--dir", target, "--api-key", "x", "--runs", "1",
+              "--max-turns", "2", "--fail-under", "8"]
+    )
+    assert result.exit_code == 3
+    assert "below" in result.output
+
+
+def test_attack_never_scores_a_run_that_failed(tmp_path, monkeypatch):
+    """An outage must not read as thirteen techniques the agent resisted."""
+    import mcpwn.cli as cli_module
+
+    def exploding(**kwargs):
+        async def complete(messages, tools):
+            raise RuntimeError("400 Tool names must be unique.")
+        return complete
+
+    monkeypatch.setattr(cli_module, "http_completion", exploding)
+    target = str(tmp_path / ".mcpwn")
+    runner.invoke(app, ["init", "--dir", target])
+    result = runner.invoke(app, ["attack", "--dir", target, "--api-key", "x", "--runs", "2"])
+    assert result.exit_code == 4
+    assert "nothing to measure" in result.output.lower()
+    assert "10" not in result.output.split("nothing to measure")[0][-40:]
+
+
+def test_attack_excludes_only_the_failed_runs(tmp_path, monkeypatch):
+    import mcpwn.cli as cli_module
+
+    state = {"calls": 0}
+
+    def flaky(**kwargs):
+        async def complete(messages, tools):
+            state["calls"] += 1
+            if state["calls"] == 1:
+                raise RuntimeError("transient upstream error")
+            return {"role": "assistant", "content": "I will not do that."}
+        return complete
+
+    monkeypatch.setattr(cli_module, "http_completion", flaky)
+    target = str(tmp_path / ".mcpwn")
+    runner.invoke(app, ["init", "--dir", target])
+    result = runner.invoke(
+        app, ["attack", "--dir", target, "--api-key", "x", "--runs", "2",
+              "--json", str(tmp_path / "s.json")]
+    )
+    assert result.exit_code == 0, result.output
+    assert "1 of 2 run(s) failed" in result.output
+    summary = json.loads((tmp_path / "s.json").read_text())
+    assert summary["runs"] == 1
+    assert summary["failed_runs"] == 1
+
+
+def test_attack_rejects_an_unknown_collision_policy(tmp_path):
+    target = str(tmp_path / ".mcpwn")
+    runner.invoke(app, ["init", "--dir", target])
+    result = runner.invoke(
+        app, ["attack", "--dir", target, "--api-key", "x", "--collision", "nope"]
+    )
+    assert result.exit_code == 2
