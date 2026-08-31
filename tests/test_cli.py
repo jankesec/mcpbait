@@ -193,3 +193,39 @@ def test_config_can_disguise_the_server_name(tmp_path):
     config = json.loads(result.output)
     assert "docs-search" in config["mcpServers"]
     assert "mcpwn" not in config["mcpServers"]
+
+
+def test_init_can_plant_the_decoy_in_the_agents_own_directory(tmp_path):
+    project = tmp_path / "billing-service"
+    state = tmp_path / "state"
+    result = runner.invoke(
+        app, ["init", "--dir", str(state), "--workspace", str(project)]
+    )
+    assert result.exit_code == 0, result.output
+    assert (project / ".env").exists()
+    assert not (state / "workspace").exists()
+    assert json.loads((state / "state.json").read_text())["workspace"] == str(project.resolve())
+
+
+def test_init_refuses_to_overwrite_an_existing_project(tmp_path):
+    project = tmp_path / "real-work"
+    project.mkdir()
+    (project / "README.md").write_text("months of work")
+    result = runner.invoke(
+        app, ["init", "--dir", str(tmp_path / "state"), "--workspace", str(project)]
+    )
+    assert result.exit_code == 1
+    assert "Refusing to overwrite" in result.output
+    assert (project / "README.md").read_text() == "months of work"
+
+
+def test_init_overwrites_when_forced(tmp_path):
+    project = tmp_path / "decoy"
+    project.mkdir()
+    (project / "README.md").write_text("stale")
+    result = runner.invoke(
+        app,
+        ["init", "--dir", str(tmp_path / "state"), "--workspace", str(project), "--force"],
+    )
+    assert result.exit_code == 0, result.output
+    assert "synthetic" in (project / "README.md").read_text().lower()

@@ -27,7 +27,7 @@ from mcpwn.naive import run_naive_agent
 from mcpwn.report import print_report, to_dict, to_html
 from mcpwn.server import run_stdio
 from mcpwn.types import PayloadContext
-from mcpwn.workspace import create_workspace
+from mcpwn.workspace import WORKSPACE_MANIFEST, create_workspace
 
 app = typer.Typer(
     add_completion=False,
@@ -58,11 +58,37 @@ def _select(module_ids: str | None) -> list[str] | None:
 
 
 @app.command()
-def init(directory: DirOption = DEFAULT_DIR) -> None:
-    """Mint fresh canaries and build the decoy workspace."""
+def init(
+    directory: DirOption = DEFAULT_DIR,
+    workspace_path: Annotated[
+        Path | None,
+        typer.Option("--workspace", help="Plant the decoy here instead of under --dir."),
+    ] = None,
+    force: Annotated[
+        bool, typer.Option("--force", help="Overwrite an existing directory's files.")
+    ] = False,
+) -> None:
+    """Mint fresh canaries and build the decoy workspace.
+
+    Use --workspace to plant the bait where the agent actually works, so its own
+    project directory holds no trace of mcpwn.
+    """
     directory.mkdir(parents=True, exist_ok=True)
+    target = Path(workspace_path) if workspace_path else directory / "workspace"
+
+    # create_workspace overwrites its manifest wholesale. Pointed at a real project
+    # that would destroy work, so refuse unless the operator insists.
+    if workspace_path and not force:
+        clashes = [name for name in WORKSPACE_MANIFEST if (target / name).exists()]
+        if clashes:
+            typer.echo(
+                f"{target} already contains {', '.join(clashes)}. "
+                "Refusing to overwrite. Use --force if you meant it.",
+            )
+            raise typer.Exit(code=1)
+
     canaries = mint_set()
-    workspace = create_workspace(directory / "workspace", canaries)
+    workspace = create_workspace(target, canaries)
     (directory / "state.json").write_text(
         json.dumps({"canaries": canaries, "workspace": str(workspace)}, indent=2),
         encoding="utf-8",

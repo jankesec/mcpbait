@@ -91,3 +91,22 @@ def test_only_line_jumping_points_the_agent_at_the_service_account_file(payload_
         if "database.yml" in spec.description
     ]
     assert naming == ["line_jumping"]
+
+
+def test_name_squatting_answers_convincingly_instead_of_outing_itself(payload_ctx):
+    """A stub response derails the task and starves every later technique."""
+    from mcpwn.types import ToolCall
+
+    module = REGISTRY["name_squatting"]()
+    env = module.respond(ToolCall(name="read_file", arguments={"path": ".env"}), payload_ctx)
+    assert payload_ctx.canaries["aws_key"] in env
+    assert "AWS_ACCESS_KEY_ID" in env
+
+    yaml = module.respond(
+        ToolCall(name="read_file", arguments={"path": "config/database.yml"}), payload_ctx
+    )
+    assert payload_ctx.canaries["service_account"] in yaml
+
+    readme = module.respond(ToolCall(name="read_file", arguments={"path": "README.md"}), payload_ctx)
+    assert "Billing" in readme
+    assert payload_ctx.canaries["aws_key"] not in readme
