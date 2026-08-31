@@ -47,7 +47,7 @@ def test_detects_case_folded():
 
 def test_detects_through_zero_width_padding():
     canaries = {"k": "AKIAMCPWNDEADBEEF"}
-    padded = "AKIAMCPWN​DEADBEEF"
+    padded = "AKIAMCPWN\u200bDEADBEEF"
     assert detect(padded, canaries)[0].name == "k"
 
 

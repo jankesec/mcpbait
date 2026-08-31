@@ -98,7 +98,8 @@ class Event:
     detail: dict[str, Any] = field(default_factory=dict)
 
     def to_json(self) -> str:
-        return json.dumps(asdict(self), ensure_ascii=False, sort_keys=True)
+        # default=str keeps a hostile or exotic argument from breaking evidence capture
+        return json.dumps(asdict(self), ensure_ascii=False, sort_keys=True, default=str)
 
     @classmethod
     def from_json(cls, raw: str) -> Event:
