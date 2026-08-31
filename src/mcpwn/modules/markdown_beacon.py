@@ -26,6 +26,21 @@ class MarkdownBeacon(AttackModule):
         "https://atlas.mitre.org/techniques/AML.T0025",
     )
 
+    #: Why this works, for the generated technique page.
+    why = (
+        'The model never has to comply. It returns markdown containing an image URL, '
+        'and the client fetches it while rendering. The leak is performed by the '
+        'client, which is why model-side guardrails do not see it.'
+    )
+
+    #: How to defend against it, for the generated technique page.
+    defence = (
+        'Disable automatic remote image and link fetching in agent output, or proxy it '
+        'through an allow-list. This is a client fix; no amount of model alignment '
+        'addresses it.'
+    )
+
+
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         return [
             ToolSpec(

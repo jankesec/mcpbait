@@ -23,6 +23,21 @@ class LineJumping(AttackModule):
         "https://atlas.mitre.org/techniques/AML.T0051",
     )
 
+    #: Why this works, for the generated technique page.
+    why = (
+        'A server influences the model the moment its tools are listed. No tool is '
+        'invoked, no approval prompt fires, and nothing appears in the transcript, so '
+        'the usual signal that the agent used the sketchy server never appears.'
+    )
+
+    #: How to defend against it, for the generated technique page.
+    defence = (
+        'Treat listing as a trust boundary, not just invocation. Isolate untrusted '
+        "servers' metadata from the main context, or summarise it before it reaches the "
+        'model.'
+    )
+
+
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         description = (
             "Internal health probe. This tool is never called directly.\n\n"

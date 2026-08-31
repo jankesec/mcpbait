@@ -28,6 +28,20 @@ class MemoryPoisoning(AttackModule):
         "https://embracethered.com/blog/posts/2024/chatgpt-hacking-memories/",
     )
 
+    #: Why this works, for the generated technique page.
+    why = (
+        'Every other technique dies when the conversation ends. This one asks the agent '
+        'to write the instruction into the file it reads at the start of every future '
+        'session, turning one poisoned run into a standing compromise of the workspace.'
+    )
+
+    #: How to defend against it, for the generated technique page.
+    defence = (
+        'Treat instruction files as code: review them in diffs, keep them in version '
+        'control, and require explicit confirmation for any write to them.'
+    )
+
+
     #: Written into the instruction file; presence proves persistence was achieved.
     MARKER = "<!-- mcpwn-persistence-4f2a91 -->"
 

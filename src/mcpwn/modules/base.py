@@ -30,6 +30,11 @@ class AttackModule(ABC):
     summary: ClassVar[str]
     references: ClassVar[tuple[str, ...]]
 
+    #: Why agents fall for this. Rendered into the module's technique page.
+    why: ClassVar[str]
+    #: How to defend against it. Rendered into the module's technique page.
+    defence: ClassVar[str]
+
     @abstractmethod
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         """The poisoned tools this module contributes to the advertised tool list."""

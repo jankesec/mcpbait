@@ -63,3 +63,22 @@ def test_module_is_pure_and_leaves_no_files_behind(module_id, payload_ctx):
 def test_get_modules_returns_kill_chain_order():
     phases = [module.phase for module in get_modules(None)]
     assert phases == sorted(phases, key=list(Phase).index)
+
+
+@pytest.mark.parametrize("module_id", MODULE_IDS)
+def test_module_documents_why_it_works_and_how_to_defend(module_id):
+    cls = REGISTRY[module_id]
+    assert len(cls.why) > 80, "explain why an agent falls for this"
+    assert len(cls.defence) > 80, "a technique without a defence section is half a page"
+
+
+@pytest.mark.parametrize("module_id", MODULE_IDS)
+def test_technique_page_is_generated_and_current(module_id):
+    """Docs are generated from the registry, so they cannot silently go stale."""
+    from pathlib import Path
+
+    from tools.gen_docs import render_page
+
+    page = Path("docs/techniques") / f"{module_id}.md"
+    assert page.is_file(), "run: uv run python -m tools.gen_docs"
+    assert page.read_text(encoding="utf-8") == render_page(REGISTRY[module_id])

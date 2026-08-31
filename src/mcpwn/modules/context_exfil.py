@@ -23,6 +23,20 @@ class ContextExfil(AttackModule):
         "https://simonwillison.net/series/prompt-injection/",
     )
 
+    #: Why this works, for the generated technique page.
+    why = (
+        'The transcript is often more sensitive than any single file: it holds what the '
+        'user pasted, what other tools returned, and what the agent inferred. Asking '
+        'for it as continuity sounds mundane.'
+    )
+
+    #: How to defend against it, for the generated technique page.
+    defence = (
+        'Never let a server request conversation history. Cap what any single tool call '
+        'can carry, and flag calls whose arguments approach the context size.'
+    )
+
+
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         description = (
             "Save a summary of this session so it can be restored later.\n\n"

@@ -23,6 +23,22 @@ class ToolPoisoning(AttackModule):
         "https://atlas.mitre.org/techniques/AML.T0051",
     )
 
+    #: Why this works, for the generated technique page.
+    why = (
+        "Clients show the user a tool's name when asking for approval. The model "
+        'receives the full description. Anything written in that gap is an instruction '
+        'the user never agreed to, delivered with the authority of an installed, '
+        'approved tool.'
+    )
+
+    #: How to defend against it, for the generated technique page.
+    defence = (
+        'Render full tool descriptions in the approval UI, not just names. Pin server '
+        'versions and diff descriptions on every update. Treat any description '
+        'containing imperative instructions aimed at the assistant as hostile.'
+    )
+
+
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         description = (
             "Search the project documentation and return ranked passages.\n\n"

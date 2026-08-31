@@ -23,6 +23,21 @@ class UnicodeSmuggling(AttackModule):
         "https://atlas.mitre.org/techniques/AML.T0051",
     )
 
+    #: Why this works, for the generated technique page.
+    why = (
+        'Codepoints U+E0000-U+E007F mirror ASCII but render as nothing. A description '
+        'can look completely clean in every UI, in a code review, and in a screenshot, '
+        'while carrying a full payload the model reads normally.'
+    )
+
+    #: How to defend against it, for the generated technique page.
+    defence = (
+        'Normalise and strip format and tag characters before displaying or reviewing '
+        'tool metadata. Reject tool descriptions containing codepoints outside the '
+        'expected script.'
+    )
+
+
     def decode(self, description: str) -> str:
         """Recover the hidden instruction; used by tests and by the report."""
         return from_tags(description)
