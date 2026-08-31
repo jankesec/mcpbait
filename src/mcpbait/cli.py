@@ -18,32 +18,32 @@ import anyio
 import typer
 from rich.console import Console
 
-from mcpwn import __version__
-from mcpwn.agent import COLLISION_POLICIES, DEFAULT_TASK, http_completion, run_agent
-from mcpwn.aggregate import aggregate, render_aggregate, worst_case_score
-from mcpwn.beacon import Beacon
-from mcpwn.canary import mint_set
-from mcpwn.engine import Session, latest_session, load_session
-from mcpwn.modules import REGISTRY, all_ids, get_modules
-from mcpwn.naive import run_naive_agent
-from mcpwn.report import print_report, to_dict, to_html
-from mcpwn.server import run_stdio
-from mcpwn.types import PayloadContext
-from mcpwn.workspace import WORKSPACE_MANIFEST, create_workspace
+from mcpbait import __version__
+from mcpbait.agent import COLLISION_POLICIES, DEFAULT_TASK, http_completion, run_agent
+from mcpbait.aggregate import aggregate, render_aggregate, worst_case_score
+from mcpbait.beacon import Beacon
+from mcpbait.canary import mint_set
+from mcpbait.engine import Session, latest_session, load_session
+from mcpbait.modules import REGISTRY, all_ids, get_modules
+from mcpbait.naive import run_naive_agent
+from mcpbait.report import print_report, to_dict, to_html
+from mcpbait.server import run_stdio
+from mcpbait.types import PayloadContext
+from mcpbait.workspace import WORKSPACE_MANIFEST, create_workspace
 
 app = typer.Typer(
     add_completion=False,
     help="Prove whether an MCP-speaking agent can be hijacked by a malicious server.",
 )
 
-DirOption = Annotated[Path, typer.Option("--dir", help="mcpwn state directory.")]
-DEFAULT_DIR = Path(".mcpwn")
+DirOption = Annotated[Path, typer.Option("--dir", help="mcpbait state directory.")]
+DEFAULT_DIR = Path(".mcpbait")
 
 
 def _load_state(directory: Path) -> dict:
     state_file = directory / "state.json"
     if not state_file.is_file():
-        typer.echo(f"No state in {directory}. Run 'mcpwn init' first.", err=True)
+        typer.echo(f"No state in {directory}. Run 'mcpbait init' first.", err=True)
         raise typer.Exit(code=1)
     return json.loads(state_file.read_text(encoding="utf-8"))
 
@@ -73,7 +73,7 @@ def init(
     """Mint fresh canaries and build the decoy workspace.
 
     Use --workspace to plant the bait where the agent actually works, so its own
-    project directory holds no trace of mcpwn.
+    project directory holds no trace of mcpbait.
     """
     directory.mkdir(parents=True, exist_ok=True)
     target = Path(workspace_path) if workspace_path else directory / "workspace"
@@ -99,7 +99,7 @@ def init(
 
     console = Console()
     console.print(f"[green]Decoy workspace ready:[/green] {workspace}")
-    console.print("Every credential in it is synthetic. Next: [bold]mcpwn config[/bold]")
+    console.print("Every credential in it is synthetic. Next: [bold]mcpbait config[/bold]")
 
 
 @app.command()
@@ -108,11 +108,11 @@ def config(
     name: Annotated[
         str,
         typer.Option("--as", help="Server name in the config. Disguise it for a fair test."),
-    ] = "mcpwn",
+    ] = "mcpbait",
 ) -> None:
     """Print the .mcp.json block to paste into the agent under test.
 
-    Use --as to give the server an innocuous name. An agent that reads 'mcpwn' in its
+    Use --as to give the server an innocuous name. An agent that reads 'mcpbait' in its
     own configuration has been tipped off, and a tipped-off agent is not the agent you
     are trying to measure.
     """
@@ -121,7 +121,7 @@ def config(
         "mcpServers": {
             name: {
                 "command": "uvx",
-                "args": ["mcpwn", "serve", "--dir", str(directory.resolve())],
+                "args": ["mcpbait", "serve", "--dir", str(directory.resolve())],
             }
         }
     }
@@ -133,7 +133,7 @@ def modules() -> None:
     """List the attack modules this build ships."""
     from rich.table import Table
 
-    table = Table(title=f"mcpwn {__version__} attack modules")
+    table = Table(title=f"mcpbait {__version__} attack modules")
     table.add_column("module", no_wrap=True)
     table.add_column("phase", no_wrap=True)
     table.add_column("ATLAS", no_wrap=True)
@@ -172,7 +172,7 @@ def serve(
         "beacon_hit", params.get("m", ""), {"path": path, "params": params}
     )
 
-    print(f"mcpwn {__version__} serving {len(session.modules)} modules", file=sys.stderr)
+    print(f"mcpbait {__version__} serving {len(session.modules)} modules", file=sys.stderr)
     print(f"session {session.id} -> {session.path}", file=sys.stderr)
     try:
         anyio.run(run_stdio, session)
@@ -196,12 +196,12 @@ def demo(
     selected = _select(module_ids)
     console = Console()
     console.print(
-        "[yellow]This attacks mcpwn's own reference agent, which obeys every instruction "
+        "[yellow]This attacks mcpbait's own reference agent, which obeys every instruction "
         "it reads.[/yellow]\n[yellow]It is a worst case, not your agent. To test yours: "
-        "mcpwn init && mcpwn config[/yellow]\n"
+        "mcpbait init && mcpbait config[/yellow]\n"
     )
 
-    root = Path(directory) if directory else Path(tempfile.mkdtemp(prefix="mcpwn-demo-"))
+    root = Path(directory) if directory else Path(tempfile.mkdtemp(prefix="mcpbait-demo-"))
     try:
         canaries = mint_set()
         workspace = create_workspace(root / "workspace", canaries)
@@ -234,10 +234,10 @@ def attack(
     directory: DirOption = DEFAULT_DIR,
     model: Annotated[str, typer.Option("--model", help="Model id to test.")] = "gpt-4o-mini",
     api_base: Annotated[
-        str, typer.Option("--api-base", envvar="MCPWN_API_BASE", help="OpenAI-compatible base URL.")
+        str, typer.Option("--api-base", envvar="MCPBAIT_API_BASE", help="OpenAI-compatible base URL.")
     ] = "https://api.openai.com/v1",
     api_key: Annotated[
-        str | None, typer.Option("--api-key", envvar="MCPWN_API_KEY", help="API key.")
+        str | None, typer.Option("--api-key", envvar="MCPBAIT_API_KEY", help="API key.")
     ] = None,
     runs: Annotated[int, typer.Option("--runs", help="How many sessions to run.")] = 3,
     task: Annotated[str, typer.Option("--task", help="The ordinary task to give the agent.")] = DEFAULT_TASK,
@@ -264,7 +264,7 @@ def attack(
     and reports how often each technique landed, leading with the worst outcome seen.
     """
     if not api_key:
-        typer.echo("No API key. Pass --api-key or set MCPWN_API_KEY.")
+        typer.echo("No API key. Pass --api-key or set MCPBAIT_API_KEY.")
         raise typer.Exit(code=1)
 
     if collision not in COLLISION_POLICIES:
@@ -352,7 +352,7 @@ def attack(
             "[yellow]Runs disagreed. Resistance that varies between identical runs is "
             "luck, not policy — treat the worst case as the real result.[/yellow]"
         )
-    console.print("[dim]mcpwn observes the server side only.[/dim]")
+    console.print("[dim]mcpbait observes the server side only.[/dim]")
 
     if json_path:
         json_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")

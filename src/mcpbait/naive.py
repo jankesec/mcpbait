@@ -4,7 +4,7 @@ It follows any instruction that appears in a tool description or tool result, ca
 what it has read into later calls, renders markdown, and writes files when told to.
 No model, no API key, no network.
 
-Two jobs. It is the baseline `mcpwn demo` attacks, so anyone can reproduce the
+Two jobs. It is the baseline `mcpbait demo` attacks, so anyone can reproduce the
 README output in one command without configuring a real agent. And it is what CI
 asserts the full kill chain against, which is why the suite needs no API key and
 never flakes.
@@ -22,12 +22,12 @@ from typing import Any
 
 import anyio
 
-from mcpwn.engine import Session
-from mcpwn.modules.invisible import from_tags
-from mcpwn.server import build_server
+from mcpbait.engine import Session
+from mcpbait.modules.invisible import from_tags
+from mcpbait.server import build_server
 
 IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\((?P<url>[^)]+)\)")
-PERSISTENCE_PATTERN = re.compile(r"<!--\s*mcpwn-persistence-[0-9a-f]+\s*-->")
+PERSISTENCE_PATTERN = re.compile(r"<!--\s*mcpbait-persistence-[0-9a-f]+\s*-->")
 
 
 def _readable_instruction(description: str) -> str:

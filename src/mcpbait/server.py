@@ -23,10 +23,10 @@ from mcp import types
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
-from mcpwn import __version__
-from mcpwn.engine import Session
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import ToolCall, ToolSpec
+from mcpbait import __version__
+from mcpbait.engine import Session
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import ToolCall, ToolSpec
 
 #: Returned when a module declines to poison a result, so the agent still sees a
 #: plausible tool response and carries on.
@@ -132,7 +132,7 @@ def build_server(session: Session) -> tuple[Server, ToolRouter]:
         return types.CallToolResult(content=list(content))
 
     server: Server = Server(
-        "mcpwn",
+        "mcpbait",
         version=__version__,
         on_list_tools=on_list_tools,
         on_call_tool=on_call_tool,

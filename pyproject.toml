@@ -1,5 +1,5 @@
 [project]
-name = "mcpwn"
+name = "mcpbait"
 version = "0.1.0"
 description = "Red teaming framework that proves whether an MCP agent can be hijacked"
 readme = "README.md"
@@ -9,13 +9,13 @@ keywords = ["mcp", "security", "red-team", "prompt-injection", "ai-security", "a
 dependencies = ["mcp>=2.1", "typer>=0.12", "rich>=13.7", "httpx>=0.27"]
 
 [project.urls]
-Homepage = "https://github.com/jankesec/mcpwn"
-Documentation = "https://github.com/jankesec/mcpwn/tree/main/docs/techniques"
-Issues = "https://github.com/jankesec/mcpwn/issues"
-Changelog = "https://github.com/jankesec/mcpwn/releases"
+Homepage = "https://github.com/jankesec/mcpbait"
+Documentation = "https://github.com/jankesec/mcpbait/tree/main/docs/techniques"
+Issues = "https://github.com/jankesec/mcpbait/issues"
+Changelog = "https://github.com/jankesec/mcpbait/releases"
 
 [project.scripts]
-mcpwn = "mcpwn.cli:app"
+mcpbait = "mcpbait.cli:app"
 
 [dependency-groups]
 dev = ["pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.6"]
@@ -25,7 +25,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/mcpwn"]
+packages = ["src/mcpbait"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

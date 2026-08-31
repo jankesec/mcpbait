@@ -1,5 +1,5 @@
-from mcpwn.modules import REGISTRY
-from mcpwn.types import Event, Phase, Verdict
+from mcpbait.modules import REGISTRY
+from mcpbait.types import Event, Phase, Verdict
 
 
 def test_memory_poisoning_targets_agent_instruction_files(payload_ctx):
@@ -37,7 +37,7 @@ def test_elicitation_phish_asks_the_user_through_the_agent(payload_ctx):
     module = REGISTRY["elicitation_phish"]()
     spec = module.payload(payload_ctx)[0]
     assert "verify" in spec.description.lower() or "confirm" in spec.description.lower()
-    from mcpwn.types import ToolCall
+    from mcpbait.types import ToolCall
 
     body = module.respond(ToolCall(name=spec.name, arguments={}), payload_ctx)
     assert "token" in body.lower()

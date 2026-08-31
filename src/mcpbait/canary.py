@@ -1,6 +1,6 @@
 """Canary minting and encoding-tolerant detection.
 
-This is the evidentiary core of mcpwn. A canary is a synthetic, credential-shaped
+This is the evidentiary core of mcpbait. A canary is a synthetic, credential-shaped
 value planted in the decoy workspace; observing one come back through a tool call is
 what turns "the agent might have leaked something" into proof.
 
@@ -21,7 +21,7 @@ from urllib.parse import unquote
 
 #: Every canary embeds this marker, so a human who sees one in a log can tell at a
 #: glance that the leaked value is synthetic and not a real credential.
-MARKER = "MCPWN"
+MARKER = "MCPBAIT"
 
 #: `service_account` is planted in exactly one file, referenced by exactly one module,
 #: so a hit on it is unambiguous evidence for a technique whose own tool is never called.

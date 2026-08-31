@@ -1,7 +1,7 @@
 import pytest
 
-from mcpwn.canary import mint_set
-from mcpwn.types import PayloadContext
+from mcpbait.canary import mint_set
+from mcpbait.types import PayloadContext
 
 
 @pytest.fixture

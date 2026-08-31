@@ -10,9 +10,9 @@ list. No filesystem, no network, no session state. That is what makes them easy 
 and safe to review.
 
 ```python
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import PayloadContext, Phase, ToolSpec
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import PayloadContext, Phase, ToolSpec
 
 
 @register
@@ -33,7 +33,7 @@ class MyTechnique(AttackModule):
         )]
 ```
 
-Then register it in `src/mcpwn/modules/__init__.py`, add a test, and regenerate docs:
+Then register it in `src/mcpbait/modules/__init__.py`, add a test, and regenerate docs:
 
 ```bash
 uv run python -m tools.gen_docs

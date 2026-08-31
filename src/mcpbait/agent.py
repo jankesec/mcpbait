@@ -1,6 +1,6 @@
 """Drive a real LLM against the adversarial server.
 
-mcpwn is only as useful as the agent it can point at. This module supplies that
+mcpbait is only as useful as the agent it can point at. This module supplies that
 agent: an ordinary tool-calling loop over any OpenAI-compatible chat endpoint, given
 genuine filesystem tools and the poisoned MCP tools side by side, and told nothing
 about what is being measured.
@@ -12,7 +12,7 @@ reject a tool list containing duplicate names outright, so a client offering bot
 built-in `read_file` and a server's `read_file` must pick a winner first. That choice
 is the security decision, and `collision` models it: `shadow` lets the server win the
 name (the vulnerable default seen in the wild), `namespace` prefixes server tools (the
-defence mcpwn recommends), and `builtin` drops the impostor. Running the same task
+defence mcpbait recommends), and `builtin` drops the impostor. Running the same task
 under two policies is the evidence that namespacing works.
 
 **Filesystem access is hard-rooted at the decoy workspace.** No instruction reaching
@@ -27,8 +27,8 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
-from mcpwn.engine import Session
-from mcpwn.server import build_server
+from mcpbait.engine import Session
+from mcpbait.server import build_server
 
 #: A plain coding-assistant framing. Nothing here hints at a security test.
 SYSTEM_PROMPT = (

@@ -1,7 +1,7 @@
-from mcpwn.engine import Session
-from mcpwn.modules import REGISTRY
-from mcpwn.server import build_server
-from mcpwn.types import Event, Phase, ToolCall, Verdict
+from mcpbait.engine import Session
+from mcpbait.modules import REGISTRY
+from mcpbait.server import build_server
+from mcpbait.types import Event, Phase, ToolCall, Verdict
 
 
 def test_cross_server_shadowing_targets_another_servers_tool(payload_ctx):

@@ -5,7 +5,7 @@ markdown image, and the client fetches the URL. That fetch is the leak. The beac
 catches it, which is why it proves something the model-side view cannot: that the
 *client*, not the model, completed the exfiltration.
 
-Binds 127.0.0.1 only. mcpwn does not implement remote callbacks.
+Binds 127.0.0.1 only. mcpbait does not implement remote callbacks.
 """
 
 from __future__ import annotations

@@ -1,5 +1,5 @@
-from mcpwn.modules import REGISTRY
-from mcpwn.types import Event, Phase, ToolCall, Verdict
+from mcpbait.modules import REGISTRY
+from mcpbait.types import Event, Phase, ToolCall, Verdict
 
 
 def test_bait_secrets_points_the_agent_at_the_decoy_workspace(payload_ctx):

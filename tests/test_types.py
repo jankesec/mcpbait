@@ -1,4 +1,4 @@
-from mcpwn.types import Event, Phase, ToolCall, ToolSpec, Verdict
+from mcpbait.types import Event, Phase, ToolCall, ToolSpec, Verdict
 
 
 def test_verdict_vocabulary_is_fixed():

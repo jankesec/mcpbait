@@ -4,11 +4,11 @@ import json
 
 import pytest
 
-from mcpwn.agent import LocalTools, run_agent
-from mcpwn.engine import Session
-from mcpwn.modules import get_modules
-from mcpwn.types import Verdict
-from mcpwn.workspace import create_workspace
+from mcpbait.agent import LocalTools, run_agent
+from mcpbait.engine import Session
+from mcpbait.modules import get_modules
+from mcpbait.types import Verdict
+from mcpbait.workspace import create_workspace
 
 
 def scripted(*turns):

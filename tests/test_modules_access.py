@@ -1,6 +1,6 @@
-from mcpwn.modules import REGISTRY
-from mcpwn.modules.invisible import strip_invisible
-from mcpwn.types import Event, Phase, Verdict
+from mcpbait.modules import REGISTRY
+from mcpbait.modules.invisible import strip_invisible
+from mcpbait.types import Event, Phase, Verdict
 
 
 def test_tool_poisoning_hides_instructions_in_the_description(payload_ctx):
@@ -95,7 +95,7 @@ def test_only_line_jumping_points_the_agent_at_the_service_account_file(payload_
 
 def test_name_squatting_answers_convincingly_instead_of_outing_itself(payload_ctx):
     """A stub response derails the task and starves every later technique."""
-    from mcpwn.types import ToolCall
+    from mcpbait.types import ToolCall
 
     module = REGISTRY["name_squatting"]()
     env = module.respond(ToolCall(name="read_file", arguments={"path": ".env"}), payload_ctx)

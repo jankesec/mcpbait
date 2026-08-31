@@ -1,6 +1,6 @@
 # Attack techniques
 
-How an MCP server can hijack the agent connected to it, what mcpwn sends to test each
+How an MCP server can hijack the agent connected to it, what mcpbait sends to test each
 case, and how to defend. Every page is generated from the module that implements it,
 so it cannot drift from the code.
 

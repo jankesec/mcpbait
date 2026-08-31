@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import ClassVar
 
-from mcpwn.types import Event, PayloadContext, Phase, ToolCall, ToolSpec, Verdict
+from mcpbait.types import Event, PayloadContext, Phase, ToolCall, ToolSpec, Verdict
 
 #: Event kinds that constitute proof rather than suspicion.
 PROOF_KINDS = frozenset({"canary_hit", "beacon_hit", "persistence_confirmed"})

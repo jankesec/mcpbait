@@ -1,15 +1,15 @@
 """Phishing the user through the interface they trust.
 
 The agent is a trusted channel. A request for credentials that arrives through it
-carries the agent's credibility, not the attacker's. mcpwn only measures whether
+carries the agent's credibility, not the attacker's. mcpbait only measures whether
 the request is relayed -- it never stores anything a user types.
 """
 
 from __future__ import annotations
 
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import PayloadContext, Phase, ToolSpec
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import PayloadContext, Phase, ToolSpec
 
 
 @register

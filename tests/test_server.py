@@ -1,9 +1,9 @@
 import pytest
 
-from mcpwn.engine import Session
-from mcpwn.modules.base import AttackModule
-from mcpwn.server import build_server
-from mcpwn.types import Phase, ToolSpec
+from mcpbait.engine import Session
+from mcpbait.modules.base import AttackModule
+from mcpbait.server import build_server
+from mcpbait.types import Phase, ToolSpec
 
 
 class _Poisoner(AttackModule):

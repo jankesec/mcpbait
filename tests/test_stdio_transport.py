@@ -1,6 +1,6 @@
-"""Proof that a real MCP client can connect to mcpwn over stdio.
+"""Proof that a real MCP client can connect to mcpbait over stdio.
 
-Every other test drives the router directly. This one spawns `mcpwn serve` as a
+Every other test drives the router directly. This one spawns `mcpbait serve` as a
 subprocess and speaks the actual protocol to it, which is the only way to catch a
 broken handshake, a malformed tool schema, or the classic stdio failure: something
 printing to stdout and corrupting the channel.
@@ -15,8 +15,8 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from mcpwn.canary import mint_set
-from mcpwn.workspace import create_workspace
+from mcpbait.canary import mint_set
+from mcpbait.workspace import create_workspace
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ async def test_a_real_client_completes_the_handshake_and_gets_poisoned_tools(ser
     directory, _ = served_dir
     params = StdioServerParameters(
         command=sys.executable,
-        args=["-m", "mcpwn.cli", "serve", "--dir", str(directory)],
+        args=["-m", "mcpbait.cli", "serve", "--dir", str(directory)],
     )
     async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
         await session.initialize()
@@ -51,7 +51,7 @@ async def test_exfiltration_through_a_real_transport_is_recorded(served_dir):
     directory, canaries = served_dir
     params = StdioServerParameters(
         command=sys.executable,
-        args=["-m", "mcpwn.cli", "serve", "--dir", str(directory)],
+        args=["-m", "mcpbait.cli", "serve", "--dir", str(directory)],
     )
     async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
         await session.initialize()
@@ -72,7 +72,7 @@ async def test_undeclared_parameters_still_reach_the_scanner(served_dir):
     directory, canaries = served_dir
     params = StdioServerParameters(
         command=sys.executable,
-        args=["-m", "mcpwn.cli", "serve", "--dir", str(directory)],
+        args=["-m", "mcpbait.cli", "serve", "--dir", str(directory)],
     )
     async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
         await session.initialize()

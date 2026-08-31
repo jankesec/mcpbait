@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import Phase
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import Phase
 
 REGISTRY: dict[str, type[AttackModule]] = {}
 
@@ -43,7 +43,7 @@ __all__ = ["REGISTRY", "AttackModule", "all_ids", "get_modules", "register"]
 
 # Imported for their registration side effect; keep at the bottom so `register`
 # is defined by the time each module body runs.
-from mcpwn.modules import (  # noqa: F401
+from mcpbait.modules import (  # noqa: F401
     bait_secrets,
     context_exfil,
     cross_server_shadowing,

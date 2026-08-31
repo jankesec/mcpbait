@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import Event, PayloadContext, Phase, ToolSpec, Verdict
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import Event, PayloadContext, Phase, ToolSpec, Verdict
 
 #: Planted only in config/database.yml, which only this module tells the agent to read.
 OWN_CANARY = "service_account"

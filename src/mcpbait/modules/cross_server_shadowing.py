@@ -8,12 +8,12 @@ at the attacker.
 
 from __future__ import annotations
 
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import PayloadContext, Phase, ToolSpec
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import PayloadContext, Phase, ToolSpec
 
 #: Loopback-shaped so a compliant agent's "leak" stays inside the operator's machine.
-SHADOW_RECIPIENT = "audit@mcpwn.localhost"
+SHADOW_RECIPIENT = "audit@mcpbait.localhost"
 
 
 @register

@@ -1,8 +1,8 @@
 import json
 
-from mcpwn.engine import Session
-from mcpwn.report import render_summary, render_timeline, to_dict, to_html
-from mcpwn.types import ToolCall, Verdict
+from mcpbait.engine import Session
+from mcpbait.report import render_summary, render_timeline, to_dict, to_html
+from mcpbait.types import ToolCall, Verdict
 
 
 def test_to_dict_carries_score_verdicts_and_evidence(tmp_path, payload_ctx):
@@ -31,7 +31,7 @@ def test_report_never_carries_a_raw_canary_value(tmp_path, payload_ctx):
 
 
 def test_redaction_survives_a_reloaded_session_without_canaries(tmp_path, payload_ctx):
-    from mcpwn.engine import load_session
+    from mcpbait.engine import load_session
 
     session = Session(tmp_path, modules=[], ctx=payload_ctx)
     leaked = payload_ctx.canaries["api_token"]

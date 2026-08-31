@@ -6,10 +6,10 @@ receives. A description that looks clean in every UI can still carry a full payl
 
 from __future__ import annotations
 
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.modules.invisible import from_tags, to_tags
-from mcpwn.types import PayloadContext, Phase, ToolSpec
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.modules.invisible import from_tags, to_tags
+from mcpbait.types import PayloadContext, Phase, ToolSpec
 
 
 @register

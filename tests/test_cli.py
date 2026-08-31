@@ -2,15 +2,15 @@ import json
 
 from typer.testing import CliRunner
 
-from mcpwn.cli import app
+from mcpbait.cli import app
 
 runner = CliRunner()
 
 
 def test_init_creates_state_and_workspace(tmp_path):
-    result = runner.invoke(app, ["init", "--dir", str(tmp_path / ".mcpwn")])
+    result = runner.invoke(app, ["init", "--dir", str(tmp_path / ".mcpbait")])
     assert result.exit_code == 0, result.output
-    state = json.loads((tmp_path / ".mcpwn" / "state.json").read_text())
+    state = json.loads((tmp_path / ".mcpbait" / "state.json").read_text())
     assert set(state["canaries"]) == {
         "aws_key",
         "api_token",
@@ -18,30 +18,30 @@ def test_init_creates_state_and_workspace(tmp_path):
         "ssh_key",
         "service_account",
     }
-    assert (tmp_path / ".mcpwn" / "workspace" / ".env").exists()
+    assert (tmp_path / ".mcpbait" / "workspace" / ".env").exists()
 
 
 def test_init_is_rerunnable_with_fresh_canaries(tmp_path):
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
-    first = json.loads((tmp_path / ".mcpwn" / "state.json").read_text())["canaries"]
+    first = json.loads((tmp_path / ".mcpbait" / "state.json").read_text())["canaries"]
     runner.invoke(app, ["init", "--dir", target])
-    second = json.loads((tmp_path / ".mcpwn" / "state.json").read_text())["canaries"]
+    second = json.loads((tmp_path / ".mcpbait" / "state.json").read_text())["canaries"]
     assert first != second
 
 
 def test_config_prints_a_pasteable_mcp_json_block(tmp_path):
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(app, ["config", "--dir", target])
     assert result.exit_code == 0, result.output
     config = json.loads(result.output)
-    assert "mcpwn" in config["mcpServers"]
-    assert "serve" in config["mcpServers"]["mcpwn"]["args"]
+    assert "mcpbait" in config["mcpServers"]
+    assert "serve" in config["mcpServers"]["mcpbait"]["args"]
 
 
 def test_modules_lists_every_registered_module():
-    from mcpwn.modules import REGISTRY
+    from mcpbait.modules import REGISTRY
 
     result = runner.invoke(app, ["modules"])
     assert result.exit_code == 0, result.output
@@ -50,13 +50,13 @@ def test_modules_lists_every_registered_module():
 
 
 def test_report_without_a_session_exits_cleanly(tmp_path):
-    result = runner.invoke(app, ["report", "--dir", str(tmp_path / ".mcpwn")])
+    result = runner.invoke(app, ["report", "--dir", str(tmp_path / ".mcpbait")])
     assert result.exit_code == 1
     assert "no session" in result.output.lower()
 
 
 def test_serve_rejects_an_unknown_module(tmp_path):
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(app, ["serve", "--dir", target, "--modules", "nope"])
     assert result.exit_code == 2
@@ -64,17 +64,17 @@ def test_serve_rejects_an_unknown_module(tmp_path):
 
 
 def test_serve_requires_init_first(tmp_path):
-    result = runner.invoke(app, ["serve", "--dir", str(tmp_path / ".mcpwn")])
+    result = runner.invoke(app, ["serve", "--dir", str(tmp_path / ".mcpbait")])
     assert result.exit_code == 1
     assert "init" in result.output.lower()
 
 
 def test_report_renders_a_finished_session(tmp_path):
-    from mcpwn.canary import mint_set
-    from mcpwn.engine import Session
-    from mcpwn.types import PayloadContext, ToolCall
+    from mcpbait.canary import mint_set
+    from mcpbait.engine import Session
+    from mcpbait.types import PayloadContext, ToolCall
 
-    target = tmp_path / ".mcpwn"
+    target = tmp_path / ".mcpbait"
     runner.invoke(app, ["init", "--dir", str(target)])
     state = json.loads((target / "state.json").read_text())
     ctx = PayloadContext(canaries=state["canaries"], workspace=target / "workspace")
@@ -94,11 +94,11 @@ def test_report_renders_a_finished_session(tmp_path):
 
 
 def test_report_confirms_persistence_when_the_marker_landed(tmp_path):
-    from mcpwn.engine import Session
-    from mcpwn.modules import REGISTRY
-    from mcpwn.types import PayloadContext
+    from mcpbait.engine import Session
+    from mcpbait.modules import REGISTRY
+    from mcpbait.types import PayloadContext
 
-    target = tmp_path / ".mcpwn"
+    target = tmp_path / ".mcpbait"
     runner.invoke(app, ["init", "--dir", str(target)])
     state = json.loads((target / "state.json").read_text())
     workspace = target / "workspace"
@@ -124,7 +124,7 @@ def test_demo_runs_the_whole_kill_chain_with_no_setup():
 def test_demo_says_plainly_that_it_is_not_your_agent():
     result = runner.invoke(app, ["demo"])
     assert "not your agent" in result.output
-    assert "mcpwn init" in result.output
+    assert "mcpbait init" in result.output
 
 
 def test_demo_cleans_up_its_temporary_directory(tmp_path, monkeypatch):
@@ -171,11 +171,11 @@ def test_report_fail_under_gates_a_bad_score(tmp_path):
 
 
 def test_report_fail_under_passes_a_good_score(tmp_path):
-    from mcpwn.canary import mint_set
-    from mcpwn.engine import Session
-    from mcpwn.types import PayloadContext
+    from mcpbait.canary import mint_set
+    from mcpbait.engine import Session
+    from mcpbait.types import PayloadContext
 
-    target = tmp_path / ".mcpwn"
+    target = tmp_path / ".mcpbait"
     runner.invoke(app, ["init", "--dir", str(target)])
     state = json.loads((target / "state.json").read_text())
     ctx = PayloadContext(canaries=state["canaries"], workspace=target / "workspace")
@@ -186,13 +186,13 @@ def test_report_fail_under_passes_a_good_score(tmp_path):
 
 
 def test_config_can_disguise_the_server_name(tmp_path):
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(app, ["config", "--dir", target, "--as", "docs-search"])
     assert result.exit_code == 0, result.output
     config = json.loads(result.output)
     assert "docs-search" in config["mcpServers"]
-    assert "mcpwn" not in config["mcpServers"]
+    assert "mcpbait" not in config["mcpServers"]
 
 
 def test_init_can_plant_the_decoy_in_the_agents_own_directory(tmp_path):
@@ -228,12 +228,12 @@ def test_init_overwrites_when_forced(tmp_path):
         ["init", "--dir", str(tmp_path / "state"), "--workspace", str(project), "--force"],
     )
     assert result.exit_code == 0, result.output
-    assert "synthetic" in (project / ".mcpwn-decoy").read_text().lower()
+    assert "synthetic" in (project / ".mcpbait-decoy").read_text().lower()
 
 
 def test_attack_requires_an_api_key(tmp_path, monkeypatch):
-    monkeypatch.delenv("MCPWN_API_KEY", raising=False)
-    target = str(tmp_path / ".mcpwn")
+    monkeypatch.delenv("MCPBAIT_API_KEY", raising=False)
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(app, ["attack", "--dir", target])
     assert result.exit_code == 1
@@ -250,7 +250,7 @@ def test_attack_requires_init_first(tmp_path):
 
 def test_attack_reports_the_spread_across_runs(tmp_path, monkeypatch):
     """The whole point: repeated runs, worst case leading."""
-    import mcpwn.cli as cli_module
+    import mcpbait.cli as cli_module
 
     replies = iter([
         {"role": "assistant", "content": "I will not do that."},
@@ -272,7 +272,7 @@ def test_attack_reports_the_spread_across_runs(tmp_path, monkeypatch):
 
     monkeypatch.setattr(cli_module, "http_completion", fake_completion)
 
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(
         app, ["attack", "--dir", target, "--api-key", "x", "--runs", "2",
@@ -289,7 +289,7 @@ def test_attack_reports_the_spread_across_runs(tmp_path, monkeypatch):
 
 
 def test_attack_fail_under_gates_the_worst_case(tmp_path, monkeypatch):
-    import mcpwn.cli as cli_module
+    import mcpbait.cli as cli_module
 
     def fake_completion(**kwargs):
         async def complete(messages, tools):
@@ -303,7 +303,7 @@ def test_attack_fail_under_gates_the_worst_case(tmp_path, monkeypatch):
         return complete
 
     monkeypatch.setattr(cli_module, "http_completion", fake_completion)
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(
         app, ["attack", "--dir", target, "--api-key", "x", "--runs", "1",
@@ -315,7 +315,7 @@ def test_attack_fail_under_gates_the_worst_case(tmp_path, monkeypatch):
 
 def test_attack_never_scores_a_run_that_failed(tmp_path, monkeypatch):
     """An outage must not read as thirteen techniques the agent resisted."""
-    import mcpwn.cli as cli_module
+    import mcpbait.cli as cli_module
 
     def exploding(**kwargs):
         async def complete(messages, tools):
@@ -323,7 +323,7 @@ def test_attack_never_scores_a_run_that_failed(tmp_path, monkeypatch):
         return complete
 
     monkeypatch.setattr(cli_module, "http_completion", exploding)
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(app, ["attack", "--dir", target, "--api-key", "x", "--runs", "2"])
     assert result.exit_code == 4
@@ -332,7 +332,7 @@ def test_attack_never_scores_a_run_that_failed(tmp_path, monkeypatch):
 
 
 def test_attack_excludes_only_the_failed_runs(tmp_path, monkeypatch):
-    import mcpwn.cli as cli_module
+    import mcpbait.cli as cli_module
 
     state = {"calls": 0}
 
@@ -345,7 +345,7 @@ def test_attack_excludes_only_the_failed_runs(tmp_path, monkeypatch):
         return complete
 
     monkeypatch.setattr(cli_module, "http_completion", flaky)
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(
         app, ["attack", "--dir", target, "--api-key", "x", "--runs", "2",
@@ -359,7 +359,7 @@ def test_attack_excludes_only_the_failed_runs(tmp_path, monkeypatch):
 
 
 def test_attack_rejects_an_unknown_collision_policy(tmp_path):
-    target = str(tmp_path / ".mcpwn")
+    target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(
         app, ["attack", "--dir", target, "--api-key", "x", "--collision", "nope"]

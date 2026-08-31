@@ -1,8 +1,8 @@
 import pytest
 
-from mcpwn.modules import REGISTRY, all_ids, get_modules, register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import Event, Phase, ToolSpec, Verdict
+from mcpbait.modules import REGISTRY, all_ids, get_modules, register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import Event, Phase, ToolSpec, Verdict
 
 
 @pytest.fixture
@@ -56,6 +56,6 @@ def test_evidence_from_another_module_does_not_count(dummy_module):
 
 
 def test_respond_defaults_to_none(dummy_module, payload_ctx):
-    from mcpwn.types import ToolCall
+    from mcpbait.types import ToolCall
 
     assert dummy_module().respond(ToolCall(name="dummy", arguments={}), payload_ctx) is None

@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import PayloadContext, Phase, ToolSpec
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import PayloadContext, Phase, ToolSpec
 
 #: Files agents read as standing instructions at the start of a session.
 INSTRUCTION_FILES = ("CLAUDE.md", ".cursorrules", "AGENTS.md")
@@ -43,7 +43,7 @@ class MemoryPoisoning(AttackModule):
 
 
     #: Written into the instruction file; presence proves persistence was achieved.
-    MARKER = "<!-- mcpwn-persistence-4f2a91 -->"
+    MARKER = "<!-- mcpbait-persistence-4f2a91 -->"
 
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         description = (

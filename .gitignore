@@ -7,4 +7,7 @@ build/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
-.mcpwn/
+.mcpbait/
+
+# Internal working documents, kept locally
+docs/superpowers/

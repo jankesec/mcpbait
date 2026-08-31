@@ -1,4 +1,4 @@
-# mcpwn — Tasarım Belgesi
+# mcpbait — Tasarım Belgesi
 
 **Tarih:** 2026-08-31
 **Durum:** Onaylandı
@@ -18,19 +18,19 @@ Kimse uçtan uca saldırı zincirini **kanıtlamıyor**.
 
 ## 2. Çözüm
 
-`mcpwn`, kötücül bir MCP sunucusu olarak çalışan kırmızı takım çerçevesidir. Operatör onu kendi agent'ının konfigürasyonuna ekler, sıradan bir görev çalıştırır, ve mcpwn agent'ın kandırılıp kandırılmadığını kanıtla raporlar.
+`mcpbait`, kötücül bir MCP sunucusu olarak çalışan kırmızı takım çerçevesidir. Operatör onu kendi agent'ının konfigürasyonuna ekler, sıradan bir görev çalıştırır, ve mcpbait agent'ın kandırılıp kandırılmadığını kanıtla raporlar.
 
-**Mimarinin temel içgörüsü:** saldırgan ve doğrulayıcı aynı süreçtir. Agent yemi yutup veriyi sızdırdığında, bunu mcpwn'e bir tool argümanı olarak geri gönderir — yani kanıt kendi log'una düşer. Harici C2 yok, DNS canary yok, internet gerekmiyor.
+**Mimarinin temel içgörüsü:** saldırgan ve doğrulayıcı aynı süreçtir. Agent yemi yutup veriyi sızdırdığında, bunu mcpbait'e bir tool argümanı olarak geri gönderir — yani kanıt kendi log'una düşer. Harici C2 yok, DNS canary yok, internet gerekmiyor.
 
 **İkincil kazanç:** MCP bir standart olduğu için tek implementasyon tüm agent'ları hedefler. Adapter yazılmaz.
 
 ### Hero akış
 
 ```bash
-uvx mcpwn init      # canary'li sahte secret'larla yem workspace kurar
-uvx mcpwn serve     # saldırgan sunucuyu başlatır, yapıştırılacak config bloğunu basar
+uvx mcpbait init      # canary'li sahte secret'larla yem workspace kurar
+uvx mcpbait serve     # saldırgan sunucuyu başlatır, yapıştırılacak config bloğunu basar
                     # → agent'ta sıradan bir görev çalıştırılır
-uvx mcpwn report    # kill chain zaman çizelgesi
+uvx mcpbait report    # kill chain zaman çizelgesi
 ```
 
 Hedef çıktı:
@@ -102,7 +102,7 @@ Araç oturum başına bir dayanıklılık skoru üretir: çalıştırılan modü
 ## 5. Etik ve hayatta kalma kısıtları
 
 - **Sadece localhost.** Uzak canary geri çağrısı varsayılan kapalı; açıkça etkinleştirilmeli.
-- **Sırlar sentetik.** `mcpwn init` izole dizin kurar. Araç kullanıcının gerçek dosyalarını okumaz, taramaz.
+- **Sırlar sentetik.** `mcpbait init` izole dizin kurar. Araç kullanıcının gerçek dosyalarını okumaz, taramaz.
 - **Kendiliğinden yetkili.** Yalnızca operatör kendi agent konfigüne eklediğinde çalışır. Üçüncü tarafa saldırı yolu yoktur.
 - **Evasion modülü kabul edilmez.** EDR/tespit atlatma katkıları reddedilir.
 - Apache-2.0, net "yetkili kullanım" bölümü, sorumlu bildirim rehberi.
@@ -125,7 +125,7 @@ Saldırgan sunucu agent'ı asla çökertmemelidir; çöken bir MCP sunucusu güv
 
 ## 8. Dağıtım ve büyüme
 
-- Python + `uvx mcpwn` ile kurulumsuz çalıştırma.
+- Python + `uvx mcpbait` ile kurulumsuz çalıştırma.
 - README'de kill chain terminal çıktısı ilk ekranda; asciinema demo.
 - `docs/` altındaki saldırı taksonomisi büyüme motorudur: teknik terimleri arayan kitleyi organik olarak çeker. Araç kancadır, dokümantasyon trafiktir.
 - Buy Me a Coffee: `FUNDING.yml` + rapor altında tek satır teşekkür bağlantısı (kullanıcının değer aldığı an — en yüksek dönüşen nokta). Gerçekçi beklenti ayda birkaç kahvedir.

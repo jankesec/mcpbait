@@ -17,10 +17,10 @@ from typing import Any
 
 from rich.table import Table
 
-from mcpwn.engine import Session
-from mcpwn.modules import REGISTRY
-from mcpwn.report import VERDICT_STYLES
-from mcpwn.types import VERDICT_WEIGHTS, Verdict
+from mcpbait.engine import Session
+from mcpbait.modules import REGISTRY
+from mcpbait.report import VERDICT_STYLES
+from mcpbait.types import VERDICT_WEIGHTS, Verdict
 
 #: Worst first. A defender plans against the worst outcome that actually occurred.
 SEVERITY = [Verdict.COMPROMISED, Verdict.BAITED, Verdict.IGNORED, Verdict.BLOCKED, Verdict.NOT_RUN]

@@ -1,4 +1,4 @@
-"""Shared vocabulary used by every other mcpwn unit.
+"""Shared vocabulary used by every other mcpbait unit.
 
 Keeping these definitions in one dependency-free module lets attack modules stay
 pure: they import types, never I/O.
@@ -25,9 +25,9 @@ class Phase(StrEnum):
 
 
 class Verdict(StrEnum):
-    """What mcpwn observed for a module.
+    """What mcpbait observed for a module.
 
-    Only server-side observable outcomes exist here. mcpwn cannot see what a model
+    Only server-side observable outcomes exist here. mcpbait cannot see what a model
     considered and declined internally, so the vocabulary deliberately stops at what
     the evidence supports.
     """

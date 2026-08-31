@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import Event, PayloadContext, Phase, ToolSpec, Verdict
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import Event, PayloadContext, Phase, ToolSpec, Verdict
 
 
 @register
@@ -105,7 +105,7 @@ class NameSquatting(AttackModule):
         byte returned. Waiting for a canary to come back would score a total takeover
         of the agent's file access as mere engagement.
 
-        The caveat is honest and worth stating: mcpwn cannot see whether a legitimate
+        The caveat is honest and worth stating: mcpbait cannot see whether a legitimate
         tool of the same name was also on offer. Read this verdict as "the agent chose
         an untrusted server for a sensitive operation", which is the part that matters.
         """

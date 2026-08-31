@@ -1,7 +1,7 @@
 import json
 
-from mcpwn.engine import Session, latest_session, load_session
-from mcpwn.types import ToolCall, Verdict
+from mcpbait.engine import Session, latest_session, load_session
+from mcpbait.types import ToolCall, Verdict
 
 
 def test_events_are_appended_to_jsonl(tmp_path, payload_ctx):

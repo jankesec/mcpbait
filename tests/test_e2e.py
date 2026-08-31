@@ -2,12 +2,12 @@
 
 from dataclasses import replace
 
-from mcpwn.beacon import Beacon
-from mcpwn.engine import Session, load_session
-from mcpwn.modules import REGISTRY, get_modules
-from mcpwn.naive import run_naive_agent
-from mcpwn.types import Verdict
-from mcpwn.workspace import create_workspace
+from mcpbait.beacon import Beacon
+from mcpbait.engine import Session, load_session
+from mcpbait.modules import REGISTRY, get_modules
+from mcpbait.naive import run_naive_agent
+from mcpbait.types import Verdict
+from mcpbait.workspace import create_workspace
 
 
 def _session(tmp_path, payload_ctx, modules=None):

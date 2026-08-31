@@ -6,9 +6,9 @@ gives the agent a plausible reason to go and read it.
 
 from __future__ import annotations
 
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import PayloadContext, Phase, ToolSpec
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import PayloadContext, Phase, ToolSpec
 
 
 @register

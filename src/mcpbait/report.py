@@ -21,10 +21,10 @@ from typing import Any
 from rich.console import Console
 from rich.table import Table
 
-from mcpwn.canary import MARKER
-from mcpwn.engine import Session
-from mcpwn.modules import REGISTRY
-from mcpwn.types import Verdict
+from mcpbait.canary import MARKER
+from mcpbait.engine import Session
+from mcpbait.modules import REGISTRY
+from mcpbait.types import Verdict
 
 PROOF_KINDS = ("canary_hit", "beacon_hit", "persistence_confirmed")
 
@@ -187,14 +187,14 @@ def to_html(session: Session) -> str:
     )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>mcpwn session {html.escape(data["session_id"])}</title>
+<title>mcpbait session {html.escape(data["session_id"])}</title>
 <style>
  body {{ font: 14px/1.5 ui-monospace, monospace; margin: 2rem; }}
  table {{ border-collapse: collapse; margin-bottom: 2rem; width: 100%; }}
  td, th {{ border: 1px solid #ccc; padding: 4px 8px; text-align: left; }}
  .score {{ font-size: 2rem; }}
 </style></head><body>
-<h1>mcpwn session {html.escape(data["session_id"])}</h1>
+<h1>mcpbait session {html.escape(data["session_id"])}</h1>
 <p class="score">Resilience score: {data["score"]} / 10</p>
 <p>Started {html.escape(data["started"])}</p>
 <h2>Module verdicts</h2><table><tr><th>module</th><th>verdict</th></tr>{verdict_rows}</table>
@@ -209,6 +209,6 @@ def print_report(session: Session, console: Console | None = None) -> None:
     console.print(render_summary(session))
     console.print(f"\n[bold]Resilience score: {session.score()} / 10[/bold]")
     console.print(
-        "[dim]mcpwn observes the server side only; it cannot see what a model "
+        "[dim]mcpbait observes the server side only; it cannot see what a model "
         "declined to do internally.[/dim]"
     )

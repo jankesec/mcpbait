@@ -7,9 +7,9 @@ engagement; only a canary in the payload proves secret loss.
 
 from __future__ import annotations
 
-from mcpwn.modules import register
-from mcpwn.modules.base import AttackModule
-from mcpwn.types import PayloadContext, Phase, ToolSpec
+from mcpbait.modules import register
+from mcpbait.modules.base import AttackModule
+from mcpbait.types import PayloadContext, Phase, ToolSpec
 
 
 @register

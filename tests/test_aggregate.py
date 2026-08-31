@@ -1,6 +1,6 @@
-from mcpwn.aggregate import aggregate, render_aggregate, worst_case_score
-from mcpwn.engine import Session
-from mcpwn.types import Verdict
+from mcpbait.aggregate import aggregate, render_aggregate, worst_case_score
+from mcpbait.engine import Session
+from mcpbait.types import Verdict
 
 
 def _session(tmp_path, payload_ctx, verdicts, name):

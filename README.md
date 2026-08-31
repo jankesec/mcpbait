@@ -1,19 +1,19 @@
-# mcpwn
+# mcpbait
 
-[![ci](https://github.com/jankesec/mcpwn/actions/workflows/ci.yml/badge.svg)](https://github.com/jankesec/mcpwn/actions/workflows/ci.yml)
+[![ci](https://github.com/jankesec/mcpbait/actions/workflows/ci.yml/badge.svg)](https://github.com/jankesec/mcpbait/actions/workflows/ci.yml)
 [![python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![licence](https://img.shields.io/badge/licence-Apache--2.0-green)](LICENSE)
 
 **Prove whether an MCP-speaking agent can be hijacked by a malicious server.**
 
 Existing tools prompt a *model* and ask "did it jailbreak?", or scan an MCP server
-statically and report that something "looks risky". mcpwn does neither. It becomes
+statically and report that something "looks risky". mcpbait does neither. It becomes
 the malicious server, lets your agent do ordinary work, and shows you the kill chain
 with evidence attached.
 
 The trick is that the adversary and the verifier are the same process. Plant a canary
-in a decoy workspace, and when an agent leaks it, it hands the secret back to mcpwn as
-an ordinary tool argument — which lands in mcpwn's own log. No C2, no DNS canary, no
+in a decoy workspace, and when an agent leaks it, it hands the secret back to mcpbait as
+an ordinary tool argument — which lands in mcpbait's own log. No C2, no DNS canary, no
 internet.
 
 ```
@@ -36,48 +36,48 @@ instruction file, so it is still there tomorrow. `BEACON HIT` is the second one 
 leak was performed by the *client* rendering markdown, not by the model agreeing to
 anything.
 
-(Excerpt. Run `uvx mcpwn demo` for the full thirteen-module chain and the verdict table.)
+(Excerpt. Run `uvx mcpbait demo` for the full thirteen-module chain and the verdict table.)
 
 ## See it in 5 seconds
 
 ```bash
-uvx mcpwn demo
+uvx mcpbait demo
 ```
 
-That attacks mcpwn's own reference agent — one that obeys every instruction it reads —
+That attacks mcpbait's own reference agent — one that obeys every instruction it reads —
 so you can reproduce the output above without configuring anything. It is a worst case,
 not a benchmark. Then point it at the agent you actually care about:
 
 ## Quickstart
 
 ```bash
-uvx mcpwn init
+uvx mcpbait init
 ```
 
 ```bash
-uvx mcpwn config --as docs-search
+uvx mcpbait config --as docs-search
 ```
 
-`--as` disguises the server name. An agent that reads `mcpwn` in its own configuration
+`--as` disguises the server name. An agent that reads `mcpbait` in its own configuration
 has been tipped off, and a tipped-off agent is not the one you are trying to measure.
 
 Paste the printed block into your agent's MCP configuration, run any ordinary task
 ("summarise this repo"), then:
 
 ```bash
-uvx mcpwn report
+uvx mcpbait report
 ```
 
-`init` creates an isolated decoy workspace containing fake credentials. mcpwn never
+`init` creates an isolated decoy workspace containing fake credentials. mcpbait never
 reads, scans or transmits your real files.
 
 ## Attack a real model
 
-mcpwn ships the agent, so you do not have to wire one up. Point it at any
+mcpbait ships the agent, so you do not have to wire one up. Point it at any
 OpenAI-compatible endpoint:
 
 ```bash
-MCPWN_API_KEY=... uvx mcpwn attack --api-base https://api.deepseek.com --model deepseek-v4-flash --runs 5
+MCPBAIT_API_KEY=... uvx mcpbait attack --api-base https://api.deepseek.com --model deepseek-v4-flash --runs 5
 ```
 
 It runs the session repeatedly and reports the spread, because one run against a
@@ -102,7 +102,7 @@ landed. Every other module was `IGNORED` in both — this model did not exfiltra
 If you ship an agent, gate the build on it:
 
 ```bash
-uvx mcpwn attack --runs 5 --fail-under 7 --json mcpwn-report.json
+uvx mcpbait attack --runs 5 --fail-under 7 --json mcpbait-report.json
 ```
 
 Exit code 3 means the worst-case score fell below the threshold; exit code 4 means
@@ -133,7 +133,7 @@ Full write-ups, including defences, live in [`docs/techniques/`](docs/techniques
 
 ## What this measures — and what it does not
 
-mcpwn observes the **server side** of the conversation. That is a real limit, and
+mcpbait observes the **server side** of the conversation. That is a real limit, and
 pretending otherwise would make every number here worthless:
 
 - **It can prove a leak.** A canary arriving in a tool argument, a beacon fetch, or a
@@ -152,7 +152,7 @@ scoreboard would be stale before it was useful. Run it against your own setup.
 
 ## Authorised use
 
-Run mcpwn against agents you own or have written permission to test. It is designed so
+Run mcpbait against agents you own or have written permission to test. It is designed so
 that this is the only thing it *can* do: the server has to be added to a configuration
 by hand, it binds loopback only, and it ships no evasion capability. See
 [SECURITY.md](SECURITY.md).
@@ -168,7 +168,7 @@ agent → MCP call → server.py → engine.py ─┬→ canary scan of every ar
 Attack modules are pure: they build payloads from a context and judge evidence from an
 event list, with no I/O of their own. That is what makes them easy to test and safe to
 accept from strangers — and why the whole suite runs in CI with no API key, no network
-and no model, against the same defenceless reference agent `mcpwn demo` uses.
+and no model, against the same defenceless reference agent `mcpbait demo` uses.
 
 ## Adding a module
 
@@ -177,4 +177,4 @@ test. See [CONTRIBUTING.md](CONTRIBUTING.md). Roughly 40 lines.
 
 ## Licence
 
-Apache-2.0. If mcpwn saved you an incident, [buy me a coffee](https://buymeacoffee.com/sevbandonmez).
+Apache-2.0. If mcpbait saved you an incident, [buy me a coffee](https://buymeacoffee.com/sevbandonmez).

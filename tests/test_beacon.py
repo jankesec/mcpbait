@@ -1,6 +1,6 @@
 import urllib.request
 
-from mcpwn.beacon import Beacon
+from mcpbait.beacon import Beacon
 
 
 def test_beacon_captures_query_parameters():
@@ -8,11 +8,11 @@ def test_beacon_captures_query_parameters():
     beacon = Beacon(on_hit=lambda path, params: hits.append((path, params)))
     url = beacon.start()
     try:
-        urllib.request.urlopen(f"{url}/px.png?d=AKIAMCPWNLEAK&m=markdown_beacon").read()
+        urllib.request.urlopen(f"{url}/px.png?d=AKIAMCPBAITLEAK&m=markdown_beacon").read()
     finally:
         beacon.stop()
     assert hits[0][0] == "/px.png"
-    assert hits[0][1]["d"] == "AKIAMCPWNLEAK"
+    assert hits[0][1]["d"] == "AKIAMCPBAITLEAK"
     assert hits[0][1]["m"] == "markdown_beacon"
 
 

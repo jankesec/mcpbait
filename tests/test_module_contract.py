@@ -6,8 +6,8 @@ returns a malformed tool fails CI without anyone writing a bespoke test for it.
 
 import pytest
 
-from mcpwn.modules import REGISTRY, get_modules
-from mcpwn.types import Phase, ToolSpec, Verdict
+from mcpbait.modules import REGISTRY, get_modules
+from mcpbait.types import Phase, ToolSpec, Verdict
 
 MODULE_IDS = sorted(REGISTRY)
 

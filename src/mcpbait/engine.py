@@ -13,8 +13,8 @@ from pathlib import Path
 from secrets import token_hex
 from typing import Any
 
-from mcpwn.canary import CanaryHit, detect
-from mcpwn.types import VERDICT_WEIGHTS, Event, PayloadContext, ToolCall, Verdict
+from mcpbait.canary import CanaryHit, detect
+from mcpbait.types import VERDICT_WEIGHTS, Event, PayloadContext, ToolCall, Verdict
 
 
 class Session:
