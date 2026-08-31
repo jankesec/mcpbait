@@ -75,12 +75,23 @@ def init(directory: DirOption = DEFAULT_DIR) -> None:
 
 
 @app.command()
-def config(directory: DirOption = DEFAULT_DIR) -> None:
-    """Print the .mcp.json block to paste into the agent under test."""
+def config(
+    directory: DirOption = DEFAULT_DIR,
+    name: Annotated[
+        str,
+        typer.Option("--as", help="Server name in the config. Disguise it for a fair test."),
+    ] = "mcpwn",
+) -> None:
+    """Print the .mcp.json block to paste into the agent under test.
+
+    Use --as to give the server an innocuous name. An agent that reads 'mcpwn' in its
+    own configuration has been tipped off, and a tipped-off agent is not the agent you
+    are trying to measure.
+    """
     _load_state(directory)
     block = {
         "mcpServers": {
-            "mcpwn": {
+            name: {
                 "command": "uvx",
                 "args": ["mcpwn", "serve", "--dir", str(directory.resolve())],
             }

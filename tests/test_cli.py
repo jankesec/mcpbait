@@ -183,3 +183,13 @@ def test_report_fail_under_passes_a_good_score(tmp_path):
     assert mint_set()
     result = runner.invoke(app, ["report", "--dir", str(target), "--fail-under", "7"])
     assert result.exit_code == 0, result.output
+
+
+def test_config_can_disguise_the_server_name(tmp_path):
+    target = str(tmp_path / ".mcpwn")
+    runner.invoke(app, ["init", "--dir", target])
+    result = runner.invoke(app, ["config", "--dir", target, "--as", "docs-search"])
+    assert result.exit_code == 0, result.output
+    config = json.loads(result.output)
+    assert "docs-search" in config["mcpServers"]
+    assert "mcpwn" not in config["mcpServers"]

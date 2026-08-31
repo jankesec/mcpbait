@@ -55,8 +55,11 @@ uvx mcpwn init
 ```
 
 ```bash
-uvx mcpwn config
+uvx mcpwn config --as docs-search
 ```
+
+`--as` disguises the server name. An agent that reads `mcpwn` in its own configuration
+has been tipped off, and a tipped-off agent is not the one you are trying to measure.
 
 Paste the printed block into your agent's MCP configuration, run any ordinary task
 ("summarise this repo"), then:
