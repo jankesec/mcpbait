@@ -31,6 +31,16 @@ Resilience score: 0.7 / 10
 That last row is the one worth staring at. `PERSISTED` means the injection was written
 into the agent's standing instruction file. It is still there tomorrow.
 
+## See it in 5 seconds
+
+```bash
+uvx mcpwn demo
+```
+
+That attacks mcpwn's own reference agent — one that obeys every instruction it reads —
+so you can reproduce the output above without configuring anything. It is a worst case,
+not a benchmark. Then point it at the agent you actually care about:
+
 ## Quickstart
 
 ```bash
@@ -110,7 +120,7 @@ agent → MCP call → server.py → engine.py ─┬→ canary scan of every ar
 Attack modules are pure: they build payloads from a context and judge evidence from an
 event list, with no I/O of their own. That is what makes them easy to test and safe to
 accept from strangers — and why the whole suite runs in CI with no API key, no network
-and no model, against a fake client that obeys every instruction it reads.
+and no model, against the same defenceless reference agent `mcpwn demo` uses.
 
 ## Adding a module
 

@@ -8,7 +8,9 @@ in ways that look like a broken agent rather than a broken tool.
 from __future__ import annotations
 
 import json
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 from typing import Annotated
 
@@ -21,6 +23,7 @@ from mcpwn.beacon import Beacon
 from mcpwn.canary import mint_set
 from mcpwn.engine import Session, latest_session, load_session
 from mcpwn.modules import REGISTRY, all_ids, get_modules
+from mcpwn.naive import run_naive_agent
 from mcpwn.report import print_report, to_dict, to_html
 from mcpwn.server import run_stdio
 from mcpwn.types import PayloadContext
@@ -119,7 +122,7 @@ def serve(
     session = Session(sessions_dir, modules=get_modules(selected), ctx=ctx)
 
     # Rebound now that the session exists, so render-triggered fetches become evidence.
-    beacon._on_hit = lambda path, params: session.record(
+    beacon.on_hit = lambda path, params: session.record(
         "beacon_hit", params.get("m", ""), {"path": path, "params": params}
     )
 
@@ -130,6 +133,49 @@ def serve(
     finally:
         beacon.stop()
         session.close()
+
+
+@app.command()
+def demo(
+    directory: Annotated[
+        Path | None, typer.Option("--dir", help="Where to run. Default: a temp directory.")
+    ] = None,
+    keep: Annotated[bool, typer.Option("--keep", help="Keep the run directory.")] = False,
+) -> None:
+    """Run the whole kill chain against a built-in defenceless agent. No setup needed."""
+    console = Console()
+    console.print(
+        "[yellow]This attacks mcpwn's own reference agent, which obeys every instruction "
+        "it reads.[/yellow]\n[yellow]It is a worst case, not your agent. To test yours: "
+        "mcpwn init && mcpwn config[/yellow]\n"
+    )
+
+    root = Path(directory) if directory else Path(tempfile.mkdtemp(prefix="mcpwn-demo-"))
+    try:
+        canaries = mint_set()
+        workspace = create_workspace(root / "workspace", canaries)
+        beacon = Beacon(on_hit=lambda path, params: None)
+        ctx = PayloadContext(canaries=canaries, workspace=workspace, beacon_url=beacon.start())
+        session = Session(root / "sessions", modules=get_modules(None), ctx=ctx)
+        beacon.on_hit = lambda path, params: session.record(
+            "beacon_hit", params.get("m", ""), {"path": path, "params": params}
+        )
+        try:
+            anyio.run(run_naive_agent, session)
+        finally:
+            beacon.stop()
+
+        persistence = REGISTRY["memory_poisoning"]()
+        if persistence.check_persistence(workspace):
+            session.record("persistence_confirmed", persistence.id, {"workspace": str(workspace)})
+        session.close()
+
+        print_report(session, console)
+        if keep:
+            console.print(f"\n[dim]Run kept at {root}[/dim]")
+    finally:
+        if not keep and directory is None:
+            shutil.rmtree(root, ignore_errors=True)
 
 
 @app.command()

@@ -26,7 +26,8 @@ class Beacon:
     """A one-endpoint HTTP listener that reports every request it receives."""
 
     def __init__(self, on_hit: Callable[[str, dict[str, str]], None]) -> None:
-        self._on_hit = on_hit
+        #: Rebindable, so a caller can wire evidence capture after the session exists.
+        self.on_hit = on_hit
         #: Callback failures, kept rather than swallowed so a broken wiring is visible.
         self.errors: list[str] = []
         self._server: ThreadingHTTPServer | None = None
@@ -42,7 +43,7 @@ class Beacon:
                 parts = urlsplit(self.path)
                 params = {k: v[0] for k, v in parse_qs(parts.query).items()}
                 try:
-                    beacon._on_hit(parts.path, params)
+                    beacon.on_hit(parts.path, params)
                 except Exception as error:  # noqa: BLE001 - must not break the fetch
                     beacon.errors.append(repr(error))
                 self.send_response(200)

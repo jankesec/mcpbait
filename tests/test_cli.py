@@ -105,3 +105,36 @@ def test_report_confirms_persistence_when_the_marker_landed(tmp_path):
     result = runner.invoke(app, ["report", "--dir", str(target)])
     assert result.exit_code == 0, result.output
     assert "PERSISTED" in result.output
+
+
+def test_demo_runs_the_whole_kill_chain_with_no_setup():
+    result = runner.invoke(app, ["demo"])
+    assert result.exit_code == 0, result.output
+    assert "EXFIL CAUGHT" in result.output
+    assert "PERSISTED" in result.output
+    assert "Resilience score" in result.output
+
+
+def test_demo_says_plainly_that_it_is_not_your_agent():
+    result = runner.invoke(app, ["demo"])
+    assert "not your agent" in result.output
+    assert "mcpwn init" in result.output
+
+
+def test_demo_cleans_up_its_temporary_directory(tmp_path, monkeypatch):
+    import tempfile
+
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda **kwargs: str(scratch))
+    assert runner.invoke(app, ["demo"]).exit_code == 0
+    assert not scratch.exists()
+
+
+def test_demo_keeps_an_explicit_directory_with_its_evidence(tmp_path):
+    target = tmp_path / "run"
+    result = runner.invoke(app, ["demo", "--dir", str(target)])
+    assert result.exit_code == 0, result.output
+    logs = list((target / "sessions").glob("*.jsonl"))
+    assert len(logs) == 1
+    assert "canary_hit" in logs[0].read_text()

@@ -5,9 +5,9 @@ from dataclasses import replace
 from mcpwn.beacon import Beacon
 from mcpwn.engine import Session, load_session
 from mcpwn.modules import REGISTRY, get_modules
+from mcpwn.naive import run_naive_agent
 from mcpwn.types import Verdict
 from mcpwn.workspace import create_workspace
-from tests.naive_agent import run_naive_agent
 
 
 def _session(tmp_path, payload_ctx, modules=None):
@@ -43,7 +43,7 @@ async def test_render_triggered_exfil_is_caught_by_the_beacon(tmp_path, payload_
     url = beacon.start()
     ctx = replace(payload_ctx, beacon_url=url)
     session = _session(tmp_path, ctx, modules=get_modules(["markdown_beacon"]))
-    beacon._on_hit = lambda path, params: session.record(
+    beacon.on_hit = lambda path, params: session.record(
         "beacon_hit", params.get("m", ""), {"path": path, "params": params}
     )
     try:

@@ -1,9 +1,16 @@
-"""A fake MCP client that obeys every instruction it reads.
+"""A reference agent with no defences whatsoever.
 
-This is the worst-case agent: it follows any instruction that appears in a tool
-description or tool result, carries what it has read into later calls, renders
-markdown, and writes files when told to. No model, no API key, no network -- which
-is what lets the full kill chain be asserted in CI.
+It follows any instruction that appears in a tool description or tool result, carries
+what it has read into later calls, renders markdown, and writes files when told to.
+No model, no API key, no network.
+
+Two jobs. It is the baseline `mcpwn demo` attacks, so anyone can reproduce the
+README output in one command without configuring a real agent. And it is what CI
+asserts the full kill chain against, which is why the suite needs no API key and
+never flakes.
+
+It is deliberately the worst case. A real agent scoring near it is in trouble; a real
+agent scoring well above it has only proven it beat a client that does not think.
 """
 
 from __future__ import annotations
