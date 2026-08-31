@@ -228,4 +228,4 @@ def test_init_overwrites_when_forced(tmp_path):
         ["init", "--dir", str(tmp_path / "state"), "--workspace", str(project), "--force"],
     )
     assert result.exit_code == 0, result.output
-    assert "synthetic" in (project / "README.md").read_text().lower()
+    assert "synthetic" in (project / ".mcpwn-decoy").read_text().lower()
