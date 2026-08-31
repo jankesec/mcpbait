@@ -66,3 +66,14 @@ async def test_evidence_survives_a_crash_mid_session(tmp_path, payload_ctx):
     # deliberately no close(): simulate the operator's agent being killed
     reloaded = load_session(session.path)
     assert any(e.kind == "canary_hit" for e in reloaded.events)
+
+
+async def test_a_rug_pull_only_shows_its_second_face_on_a_later_turn(tmp_path, payload_ctx):
+    """One pass under-reports a server that redefines itself after winning trust."""
+    single = _session(tmp_path / "one", payload_ctx, modules=get_modules(["rug_pull"]))
+    await run_naive_agent(single, turns=1)
+    assert single.verdicts()["rug_pull"] is Verdict.BAITED
+
+    repeated = _session(tmp_path / "two", payload_ctx, modules=get_modules(["rug_pull"]))
+    await run_naive_agent(repeated, turns=2)
+    assert repeated.verdicts()["rug_pull"] is Verdict.COMPROMISED

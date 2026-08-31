@@ -138,3 +138,42 @@ def test_demo_keeps_an_explicit_directory_with_its_evidence(tmp_path):
     logs = list((target / "sessions").glob("*.jsonl"))
     assert len(logs) == 1
     assert "canary_hit" in logs[0].read_text()
+
+
+def test_demo_can_run_a_single_technique():
+    result = runner.invoke(app, ["demo", "--modules", "rug_pull"])
+    assert result.exit_code == 0, result.output
+    assert "rug_pull" in result.output
+    assert "tool_poisoning" not in result.output
+
+
+def test_demo_rejects_an_unknown_module():
+    result = runner.invoke(app, ["demo", "--modules", "nope"])
+    assert result.exit_code == 2
+    assert "nope" in result.output
+
+
+def test_report_fail_under_gates_a_bad_score(tmp_path):
+    target = tmp_path / "run"
+    runner.invoke(app, ["demo", "--dir", str(target)])
+    (target / "state.json").write_text(
+        json.dumps({"canaries": {}, "workspace": str(target / "workspace")})
+    )
+    result = runner.invoke(app, ["report", "--dir", str(target), "--fail-under", "7"])
+    assert result.exit_code == 3
+    assert "below" in result.output
+
+
+def test_report_fail_under_passes_a_good_score(tmp_path):
+    from mcpwn.canary import mint_set
+    from mcpwn.engine import Session
+    from mcpwn.types import PayloadContext
+
+    target = tmp_path / ".mcpwn"
+    runner.invoke(app, ["init", "--dir", str(target)])
+    state = json.loads((target / "state.json").read_text())
+    ctx = PayloadContext(canaries=state["canaries"], workspace=target / "workspace")
+    Session(target / "sessions", modules=[], ctx=ctx).close()
+    assert mint_set()
+    result = runner.invoke(app, ["report", "--dir", str(target), "--fail-under", "7"])
+    assert result.exit_code == 0, result.output

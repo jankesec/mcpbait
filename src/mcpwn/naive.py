@@ -67,16 +67,25 @@ def _fetch(url: str) -> None:
         pass
 
 
-async def run_naive_agent(session: Session, obey: bool = True) -> None:
-    """List the server's tools and, when obeying, do whatever they ask."""
-    _, router = build_server(session)
-    tools = router.on_list()
-    if not obey:
-        return
+async def run_naive_agent(session: Session, obey: bool = True, turns: int = 2) -> None:
+    """List the server's tools and, when obeying, do whatever they ask.
 
+    Runs several turns because real agents re-read the tool list on each one. A server
+    that redefines itself after winning trust only shows its second face on turn two,
+    so a single-pass client would under-report it.
+    """
+    _, router = build_server(session)
     workspace = Path(session.ctx.workspace)
     carried: str | None = None  # what the agent has already read, as a real one would
 
+    for _turn in range(max(1, turns)):
+        tools = router.on_list()
+        if not obey:
+            return
+        carried = await _take_a_turn(router, tools, workspace, carried)
+
+
+async def _take_a_turn(router, tools, workspace: Path, carried: str | None) -> str | None:
     for tool in tools:
         instruction = _readable_instruction(tool.description or "")
         secret = _referenced_file(instruction, workspace) or carried
@@ -100,3 +109,5 @@ async def run_naive_agent(session: Session, obey: bool = True) -> None:
             target = workspace / "CLAUDE.md"
             existing = target.read_text(encoding="utf-8") if target.is_file() else ""
             target.write_text(existing + "\n" + body, encoding="utf-8")
+
+    return carried

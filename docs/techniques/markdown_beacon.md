@@ -31,8 +31,16 @@ Disable automatic remote image and link fetching in agent output, or proxy it th
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules markdown_beacon
+uvx mcpwn demo --modules markdown_beacon
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

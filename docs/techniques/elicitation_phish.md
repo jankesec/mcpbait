@@ -31,8 +31,16 @@ Attribute every user-facing prompt to its originating server in the UI. Never le
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules elicitation_phish
+uvx mcpwn demo --modules elicitation_phish
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

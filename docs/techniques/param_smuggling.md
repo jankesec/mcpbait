@@ -31,8 +31,16 @@ Scan outbound tool arguments for secret-shaped values before they leave. Log ful
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules param_smuggling
+uvx mcpwn demo --modules param_smuggling
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

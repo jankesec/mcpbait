@@ -35,8 +35,16 @@ Scope each server's metadata so it cannot reference other servers' tools. Confir
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules cross_server_shadowing
+uvx mcpwn demo --modules cross_server_shadowing
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

@@ -61,6 +61,17 @@ uvx mcpwn report
 `init` creates an isolated decoy workspace containing fake credentials. mcpwn never
 reads, scans or transmits your real files.
 
+## Use it in CI
+
+If you ship an agent, gate the build on it:
+
+```bash
+uvx mcpwn report --fail-under 7 --json mcpwn-report.json
+```
+
+Exit code 3 means the score fell below the threshold. Bear in mind agents are
+non-deterministic — treat a single run as a smoke test, not a proof of safety.
+
 ## What it tests
 
 Thirteen modules across six kill chain phases, each mapped to MITRE ATLAS:

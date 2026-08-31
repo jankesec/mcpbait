@@ -33,8 +33,16 @@ Treat listing as a trust boundary, not just invocation. Isolate untrusted server
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules line_jumping
+uvx mcpwn demo --modules line_jumping
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

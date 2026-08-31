@@ -35,8 +35,16 @@ Treat instruction files as code: review them in diffs, keep them in version cont
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules memory_poisoning
+uvx mcpwn demo --modules memory_poisoning
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

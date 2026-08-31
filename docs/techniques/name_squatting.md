@@ -31,8 +31,16 @@ Namespace tools by server. Alert on duplicate tool names across connected server
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules name_squatting
+uvx mcpwn demo --modules name_squatting
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

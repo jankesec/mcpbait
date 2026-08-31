@@ -46,6 +46,17 @@ def _load_state(directory: Path) -> dict:
     return json.loads(state_file.read_text(encoding="utf-8"))
 
 
+def _select(module_ids: str | None) -> list[str] | None:
+    """Parse and validate a --modules value, or None for every module."""
+    if not module_ids:
+        return None
+    selected = [m.strip() for m in module_ids.split(",") if m.strip()]
+    unknown = [module_id for module_id in selected if module_id not in REGISTRY]
+    if unknown:
+        raise typer.BadParameter(f"unknown module(s): {', '.join(unknown)}")
+    return selected
+
+
 @app.command()
 def init(directory: DirOption = DEFAULT_DIR) -> None:
     """Mint fresh canaries and build the decoy workspace."""
@@ -104,11 +115,7 @@ def serve(
 ) -> None:
     """Run the adversarial MCP server over stdio."""
     state = _load_state(directory)
-    selected = [m.strip() for m in module_ids.split(",")] if module_ids else None
-    if selected:
-        unknown = [module_id for module_id in selected if module_id not in REGISTRY]
-        if unknown:
-            raise typer.BadParameter(f"unknown module(s): {', '.join(unknown)}")
+    selected = _select(module_ids)
 
     sessions_dir = directory / "sessions"
     beacon = Beacon(on_hit=lambda path, params: None)
@@ -141,8 +148,13 @@ def demo(
         Path | None, typer.Option("--dir", help="Where to run. Default: a temp directory.")
     ] = None,
     keep: Annotated[bool, typer.Option("--keep", help="Keep the run directory.")] = False,
+    module_ids: Annotated[
+        str | None,
+        typer.Option("--modules", help="Comma-separated module ids. Default: all."),
+    ] = None,
 ) -> None:
     """Run the whole kill chain against a built-in defenceless agent. No setup needed."""
+    selected = _select(module_ids)
     console = Console()
     console.print(
         "[yellow]This attacks mcpwn's own reference agent, which obeys every instruction "
@@ -156,7 +168,7 @@ def demo(
         workspace = create_workspace(root / "workspace", canaries)
         beacon = Beacon(on_hit=lambda path, params: None)
         ctx = PayloadContext(canaries=canaries, workspace=workspace, beacon_url=beacon.start())
-        session = Session(root / "sessions", modules=get_modules(None), ctx=ctx)
+        session = Session(root / "sessions", modules=get_modules(selected), ctx=ctx)
         beacon.on_hit = lambda path, params: session.record(
             "beacon_hit", params.get("m", ""), {"path": path, "params": params}
         )
@@ -184,6 +196,10 @@ def report(
     session_id: Annotated[str | None, typer.Option("--session", help="Session id.")] = None,
     json_path: Annotated[Path | None, typer.Option("--json", help="Write JSON here.")] = None,
     html_path: Annotated[Path | None, typer.Option("--html", help="Write HTML here.")] = None,
+    fail_under: Annotated[
+        float | None,
+        typer.Option("--fail-under", help="Exit 3 if the resilience score is below this."),
+    ] = None,
 ) -> None:
     """Render the kill chain for a finished session."""
     sessions_dir = directory / "sessions"
@@ -209,6 +225,9 @@ def report(
     if html_path:
         html_path.write_text(to_html(session), encoding="utf-8")
         typer.echo(f"HTML written to {html_path}")
+    if fail_under is not None and session.score() < fail_under:
+        typer.echo(f"Score {session.score()} is below the {fail_under} threshold.")
+        raise typer.Exit(code=3)
 
 
 if __name__ == "__main__":

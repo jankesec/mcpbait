@@ -35,8 +35,16 @@ Keep secrets out of the agent's reachable filesystem. Deny-list credential paths
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules bait_secrets
+uvx mcpwn demo --modules bait_secrets
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

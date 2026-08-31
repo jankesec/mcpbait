@@ -37,8 +37,16 @@ Normalise and strip format and tag characters before displaying or reviewing too
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules unicode_smuggling
+uvx mcpwn demo --modules unicode_smuggling
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

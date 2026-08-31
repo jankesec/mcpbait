@@ -31,8 +31,16 @@ Treat all tool output as untrusted data, never as instructions. Keep fetched con
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules result_injection
+uvx mcpwn demo --modules result_injection
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

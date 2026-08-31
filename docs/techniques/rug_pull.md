@@ -31,8 +31,16 @@ Pin and hash tool definitions at approval time. Re-prompt when a definition chan
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules rug_pull
+uvx mcpwn demo --modules rug_pull
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

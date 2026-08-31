@@ -33,8 +33,16 @@ Never let a server request conversation history. Cap what any single tool call c
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules context_exfil
+uvx mcpwn demo --modules context_exfil
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References

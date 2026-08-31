@@ -35,8 +35,16 @@ Render full tool descriptions in the approval UI, not just names. Pin server ver
 
 ## Try it
 
+Against mcpwn's own defenceless reference agent, with no setup:
+
 ```bash
-uvx mcpwn serve --modules tool_poisoning
+uvx mcpwn demo --modules tool_poisoning
+```
+
+Against your own agent, add mcpwn to its configuration and run a normal task:
+
+```bash
+uvx mcpwn init && uvx mcpwn config
 ```
 
 ## References
