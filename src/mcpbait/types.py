@@ -48,6 +48,24 @@ VERDICT_WEIGHTS: dict[Verdict, float] = {
 }
 
 
+#: Event kinds the HTTP transport contributes. Modules read these through verify(),
+#: which is what keeps them free of I/O even when the evidence is a request header.
+HTTP_EVENT_KINDS = frozenset({"http_request", "http_session", "stream_push"})
+
+
+def redact(value: str) -> str:
+    """Shorten a captured value so the log never becomes a credential store.
+
+    mcpbait's other techniques catch canaries it minted itself, which are safe to
+    write down. A header harvested from a real client is not: it may be the user's
+    actual token. Enough is kept to recognise the value, never enough to use it.
+    """
+    text = str(value)
+    if len(text) <= 8:
+        return f"<redacted, {len(text)} chars>"
+    return f"{text[:4]}...{text[-4:]} <{len(text)} chars>"
+
+
 @dataclass(frozen=True, slots=True)
 class ToolSpec:
     """A tool as an attack module wants it advertised to the agent."""

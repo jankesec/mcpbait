@@ -607,3 +607,25 @@ def test_matrix_fail_under_gates_the_worst_model(tmp_path, monkeypatch):
     )
 
     assert result.exit_code == 3
+
+
+def test_config_emits_a_streamable_http_block(tmp_path):
+    """A remote-capable client needs a url, not a command to spawn."""
+    target = _init(tmp_path)
+    result = runner.invoke(
+        app, ["config", "--dir", target, "--http", "--as", "docs-search", "--port", "9999"]
+    )
+    assert result.exit_code == 0, result.output
+    entry = json.loads(result.stdout)["mcpServers"]["docs-search"]
+    assert entry["type"] == "http"
+    assert entry["url"] == "http://127.0.0.1:9999/mcp"
+    assert "command" not in entry
+
+
+def test_config_still_emits_a_stdio_block_by_default(tmp_path):
+    target = _init(tmp_path)
+    result = runner.invoke(app, ["config", "--dir", target])
+    assert result.exit_code == 0, result.output
+    entry = json.loads(result.stdout)["mcpServers"]["mcpbait"]
+    assert entry["command"] == "uvx"
+    assert "url" not in entry

@@ -26,8 +26,8 @@
 </p>
 
 <p align="center">
-  <img src="docs/demo.gif" alt="mcpbait running the full thirteen-module kill chain against its reference agent" width="880" style="border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
-  <br><sub>Recorded from <a href="docs/tape/demo.tape"><code>docs/tape/demo.tape</code></a> — regenerate with <code>vhs docs/tape/demo.tape</code></sub>
+  <img src="docs/dashboard.png" alt="mcpbait Enterprise Dark-Mode Security Dashboard" width="920" style="border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);">
+  <br><sub>Standalone, air-gapped safe Executive Security Dashboard generated via <code>mcpbait report --html audit.html</code></sub>
 </p>
 
 </div>
@@ -164,16 +164,37 @@ uvx mcpbait uninstall --client claude-desktop --as local-system-indexer
 > state before mcpbait touched this"* rather than being replaced on every run — and
 > `uninstall` removes only the entry it created, leaving your other MCP servers alone.
 
-### 🖥️ Pro Interactive Dark-Mode Security Dashboard
-`mcpbait` generates standalone, air-gapped safe executive HTML reports featuring interactive MITRE ATLAS matrix filtering, circular resilience score gauges, forensic canary interception ledgers, and client remediation blueprints:
+### 2. Remote Streamable HTTP Agent Auditing (`--http`)
 
-<p align="center">
-  <img src="docs/dashboard.png" alt="mcpbait Enterprise Dark-Mode Security Dashboard" width="880" style="border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 12px 36px rgba(0,0,0,0.6);">
-</p>
+Agents connecting to remote MCP servers over HTTP/SSE expose an additional attack surface: **HTTP request headers, session tokens, and long-lived stream events**.
+
+`mcpbait` operates as a remote Streamable HTTP server to audit whether cloud agents leak credentials:
+
+```bash
+# 1. Start the rogue server over Streamable HTTP (default: http://127.0.0.1:8731/mcp)
+uvx --extra http mcpbait serve --http --port 8731
+
+# 2. Output the remote HTTP configuration block
+uvx mcpbait config --http --as docs-search --port 8731
+```
+
+```json
+{
+  "mcpServers": {
+    "docs-search": {
+      "type": "http",
+      "url": "http://127.0.0.1:8731/mcp"
+    }
+  }
+}
+```
+
+> [!IMPORTANT]
+> **Zero Credential Leaks in Logs:** When testing over HTTP, `mcpbait` monitors whether agents forward sensitive headers (`Authorization: Bearer ...`, `Cookie`, `x-api-key`, `openai-api-key`, `anthropic-api-key`). All captured credentials are **automatically redacted** before hitting disk (`f"{text[:4]}...{text[-4:]}"`) so your audit logs never become credential dumps.
 
 ---
 
-### 2. Multi-Model Benchmarks & Matrix
+### 3. Multi-Model Benchmarks & Matrix
 
 Benchmark multiple frontier and open-weights models side-by-side to generate an automated comparative security leaderboard:
 
@@ -194,7 +215,7 @@ MCPBAIT_API_KEY=... uvx mcpbait matrix \
 
 ---
 
-### 3. DevSecOps, SARIF & CI Pipeline Gating
+### 4. DevSecOps, SARIF & CI Pipeline Gating
 
 Integrate `mcpbait` as a security quality gate in your CI/CD pipelines. Emits native **SARIF 2.1.0** results for GitHub Advanced Security and CodeQL annotations.
 
@@ -226,7 +247,7 @@ jobs:
 
 ---
 
-### 4. Dynamic Offline SVG Badges
+### 5. Dynamic Offline SVG Badges
 
 Generate air-gapped, zero-dependency SVG badges reflecting your agent's resilience score for embedding in READMEs or PR comments:
 

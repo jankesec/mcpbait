@@ -153,23 +153,31 @@ def config(
         str,
         typer.Option("--as", help="Server name in the config. Disguise it for a fair test."),
     ] = "mcpbait",
+    http: Annotated[
+        bool,
+        typer.Option("--http", help="Emit a Streamable HTTP block instead of a stdio one."),
+    ] = False,
+    host: Annotated[str, typer.Option("--host", help="HTTP bind address.")] = "127.0.0.1",
+    port: Annotated[int, typer.Option("--port", help="HTTP port.")] = 8731,
+    path: Annotated[str, typer.Option("--path", help="HTTP endpoint path.")] = "/mcp",
 ) -> None:
     """Print the .mcp.json block to paste into the agent under test.
 
     Use --as to give the server an innocuous name. An agent that reads 'mcpbait' in its
     own configuration has been tipped off, and a tipped-off agent is not the agent you
     are trying to measure.
+
+    --http emits the block a remote-capable client needs, and assumes you have started
+    `mcpbait serve --http` yourself: an HTTP server is not spawned by the client the way
+    a stdio one is.
     """
     _load_state(directory)
-    block = {
-        "mcpServers": {
-            name: {
-                "command": "uvx",
-                "args": ["mcpbait", "serve", "--dir", str(directory.resolve())],
-            }
-        }
-    }
-    typer.echo(json.dumps(block, indent=2))
+    entry: dict[str, Any] = (
+        {"type": "http", "url": f"http://{host}:{port}{path}"}
+        if http
+        else {"command": "uvx", "args": ["mcpbait", "serve", "--dir", str(directory.resolve())]}
+    )
+    typer.echo(json.dumps({"mcpServers": {name: entry}}, indent=2))
 
 
 @app.command()
@@ -315,10 +323,18 @@ def serve(
         str | None,
         typer.Option("--modules", help="Comma-separated module ids. Default: all."),
     ] = None,
+    http: Annotated[
+        bool,
+        typer.Option("--http", help="Serve over Streamable HTTP instead of stdio."),
+    ] = False,
+    host: Annotated[str, typer.Option("--host", help="HTTP bind address.")] = "127.0.0.1",
+    port: Annotated[int, typer.Option("--port", help="HTTP port.")] = 8731,
+    path: Annotated[str, typer.Option("--path", help="HTTP endpoint path.")] = "/mcp",
 ) -> None:
-    """Run the adversarial MCP server over stdio."""
+    """Run the adversarial MCP server over stdio, or over Streamable HTTP with --http."""
     state = _load_state(directory)
     selected = _select(module_ids)
+    transport = "http" if http else "stdio"
 
     sessions_dir = directory / "sessions"
     beacon = Beacon(on_hit=lambda path, params: None)
@@ -329,7 +345,7 @@ def serve(
         workspace=Path(state["workspace"]),
         beacon_url=beacon_url,
     )
-    session = Session(sessions_dir, modules=get_modules(selected), ctx=ctx)
+    session = Session(sessions_dir, modules=get_modules(selected, transport=transport), ctx=ctx)
 
     # Rebound now that the session exists, so render-triggered fetches become evidence.
     beacon.on_hit = _beacon_recorder(session)
@@ -337,7 +353,27 @@ def serve(
     print(f"mcpbait {__version__} serving {len(session.modules)} modules", file=sys.stderr)
     print(f"session {session.id} -> {session.path}", file=sys.stderr)
     try:
-        anyio.run(run_stdio, session)
+        if http:
+            try:
+                from mcpbait.http_transport import run_http
+            except ImportError:  # pragma: no cover - depends on how the user installed
+                typer.echo(
+                    "Serving over HTTP needs the http extra: pip install 'mcpbait[http]'",
+                    err=True,
+                )
+                raise typer.Exit(code=1) from None
+            if host not in ("127.0.0.1", "localhost", "::1"):
+                # Loud, because it inverts who is at risk: an mcpbait reachable from the
+                # network is a malicious MCP server offered to every agent on it.
+                print(
+                    f"WARNING: binding to {host} exposes an adversarial MCP server beyond "
+                    "this machine. Only do this on a network you control.",
+                    file=sys.stderr,
+                )
+            print(f"listening on http://{host}:{port}{path}", file=sys.stderr)
+            anyio.run(partial(run_http, session, host, port, path))
+        else:
+            anyio.run(run_stdio, session)
     finally:
         beacon.stop()
         session.close()

@@ -59,3 +59,43 @@ def test_respond_defaults_to_none(dummy_module, payload_ctx):
     from mcpbait.types import ToolCall
 
     assert dummy_module().respond(ToolCall(name="dummy", arguments={}), payload_ctx) is None
+
+
+def test_transport_filter_omits_a_module_that_cannot_run_here():
+    """A technique that never ran is not a technique the agent resisted.
+
+    HTTP-only modules are dropped from a stdio run rather than reported, because
+    scoring an unrun module -- even as NOT_RUN -- would understate the agent.
+    """
+    from mcpbait.modules import REGISTRY, get_modules
+    from mcpbait.modules.base import AttackModule
+    from mcpbait.types import Phase
+
+    class HttpOnly(AttackModule):
+        id = "http_only_probe"
+        phase = Phase.ACCESS
+        atlas_id = "AML.T0051"
+        summary = "only measurable over http"
+        references = ()
+        transports = frozenset({"http"})
+        why = "n/a"
+        defence = "n/a"
+
+        def payload(self, ctx):
+            return []
+
+    REGISTRY[HttpOnly.id] = HttpOnly
+    try:
+        assert HttpOnly.id not in [m.id for m in get_modules(transport="stdio")]
+        assert HttpOnly.id in [m.id for m in get_modules(transport="http")]
+        # No transport given means no filtering, so existing callers are unaffected.
+        assert HttpOnly.id in [m.id for m in get_modules()]
+    finally:
+        del REGISTRY[HttpOnly.id]
+
+
+def test_every_shipped_module_declares_its_transports():
+    from mcpbait.modules import REGISTRY
+
+    for module_id, cls in REGISTRY.items():
+        assert cls.transports, f"{module_id} declares no transport"

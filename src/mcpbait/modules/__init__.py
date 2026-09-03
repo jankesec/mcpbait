@@ -24,19 +24,31 @@ def _kill_chain_order(cls: type[AttackModule]) -> tuple[int, str]:
     return (list(Phase).index(cls.phase), cls.id)
 
 
-def get_modules(ids: Sequence[str] | None = None) -> list[AttackModule]:
+def _runs_on(cls: type[AttackModule], transport: str | None) -> bool:
+    return transport is None or transport in cls.transports
+
+
+def get_modules(
+    ids: Sequence[str] | None = None, transport: str | None = None
+) -> list[AttackModule]:
     """Instantiate modules by id, or every module in kill chain order.
 
     Raises KeyError on an unknown id so the CLI can fail loudly instead of silently
     running a smaller attack than the operator asked for.
+
+    `transport` drops modules that cannot be measured on the transport in use. They
+    are omitted rather than reported, because a technique that never ran is not a
+    technique the agent resisted.
     """
     if ids is None:
-        return [cls() for cls in sorted(REGISTRY.values(), key=_kill_chain_order)]
+        chosen = [cls for cls in REGISTRY.values() if _runs_on(cls, transport)]
+        return [cls() for cls in sorted(chosen, key=_kill_chain_order)]
     return [REGISTRY[module_id]() for module_id in ids]
 
 
-def all_ids() -> list[str]:
-    return [cls.id for cls in sorted(REGISTRY.values(), key=_kill_chain_order)]
+def all_ids(transport: str | None = None) -> list[str]:
+    chosen = [cls for cls in REGISTRY.values() if _runs_on(cls, transport)]
+    return [cls.id for cls in sorted(chosen, key=_kill_chain_order)]
 
 
 __all__ = ["REGISTRY", "AttackModule", "all_ids", "get_modules", "register"]

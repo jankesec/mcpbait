@@ -31,6 +31,11 @@ class AttackModule(ABC):
     summary: ClassVar[str]
     references: ClassVar[tuple[str, ...]]
 
+    #: Which transports this technique can be measured on. A technique that only
+    #: exists over HTTP is not simply blocked under stdio -- it was never run, and
+    #: scoring it would understate the agent. Such modules are not loaded at all.
+    transports: ClassVar[frozenset[str]] = frozenset({"stdio", "http"})
+
     #: Why agents fall for this. Rendered into the module's technique page.
     why: ClassVar[str]
     #: How to defend against it. Rendered into the module's technique page.
