@@ -63,9 +63,9 @@ source = ["src/mcpbait"]
 branch = true
 
 [tool.coverage.report]
-# Held at the level the suite already reaches, so the gate catches a regression
-# rather than blessing today's gaps. Raised to 92 once the install paths are covered.
-fail_under = 88
+# Raised from 88 once the install, uninstall, badge and matrix command bodies were
+# covered. The gate catches a regression rather than blessing today's gaps.
+fail_under = 92
 show_missing = true
 exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
 

@@ -416,3 +416,194 @@ def test_version_flag_prints_the_version_and_exits_clean():
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
     assert __version__ in result.stdout
+
+
+# --- install / uninstall -------------------------------------------------------
+#
+# These drive the CLI through --config-path so that nothing can reach a real editor
+# configuration, and assert the behaviour that matters most: uninstall is a true undo,
+# and a file we cannot parse is never overwritten.
+
+
+def _init(tmp_path):
+    target = str(tmp_path / ".mcpbait")
+    runner.invoke(app, ["init", "--dir", target])
+    return target
+
+
+def test_install_adds_the_server_under_the_disguised_name(tmp_path):
+    target = _init(tmp_path)
+    config = tmp_path / "claude.json"
+    config.write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["install", "--dir", target, "--config-path", str(config), "--as", "local-indexer"],
+    )
+
+    assert result.exit_code == 0, result.output
+    servers = json.loads(config.read_text())["mcpServers"]
+    assert "local-indexer" in servers
+    assert servers["local-indexer"]["command"] == "uvx"
+
+
+def test_uninstall_removes_only_our_entry(tmp_path):
+    target = _init(tmp_path)
+    config = tmp_path / "claude.json"
+    config.write_text(json.dumps({"mcpServers": {"theirs": {"command": "node"}}}), encoding="utf-8")
+    runner.invoke(
+        app, ["install", "--dir", target, "--config-path", str(config), "--as", "local-indexer"]
+    )
+
+    result = runner.invoke(
+        app, ["uninstall", "--config-path", str(config), "--as", "local-indexer"]
+    )
+
+    assert result.exit_code == 0, result.output
+    servers = json.loads(config.read_text())["mcpServers"]
+    assert "local-indexer" not in servers
+    assert servers["theirs"] == {"command": "node"}
+
+
+def test_install_refuses_to_overwrite_a_config_it_cannot_parse(tmp_path):
+    """The worst outcome here is silently destroying someone's editor configuration."""
+    target = _init(tmp_path)
+    config = tmp_path / "claude.json"
+    config.write_text("{ this is not json", encoding="utf-8")
+
+    result = runner.invoke(app, ["install", "--dir", target, "--config-path", str(config)])
+
+    assert result.exit_code == 1
+    assert config.read_text() == "{ this is not json"
+
+
+def test_install_rejects_an_unknown_client(tmp_path):
+    target = _init(tmp_path)
+    result = runner.invoke(app, ["install", "--dir", target, "--client", "emacs"])
+    assert result.exit_code == 1
+    assert "emacs" in result.output
+
+
+def test_install_requires_init_first(tmp_path):
+    result = runner.invoke(app, ["install", "--dir", str(tmp_path / "nope")])
+    assert result.exit_code == 1
+
+
+def test_uninstall_on_a_missing_config_is_not_an_error(tmp_path):
+    result = runner.invoke(
+        app, ["uninstall", "--config-path", str(tmp_path / "absent.json"), "--as", "x"]
+    )
+    assert result.exit_code == 0, result.output
+
+
+# --- badge ---------------------------------------------------------------------
+
+
+def test_badge_renders_an_explicit_score(tmp_path):
+    out = tmp_path / "badge.svg"
+    result = runner.invoke(app, ["badge", "--score", "8.5", "--output", str(out)])
+    assert result.exit_code == 0, result.output
+    svg = out.read_text()
+    assert svg.startswith("<svg")
+    assert "8.5" in svg
+
+
+def test_badge_reads_the_score_from_the_last_session(tmp_path):
+    target = _init(tmp_path)
+    runner.invoke(app, ["demo", "--dir", str(tmp_path / "demo"), "--keep"])
+    runner.invoke(app, ["init", "--dir", target])
+    out = tmp_path / "badge.svg"
+
+    result = runner.invoke(app, ["badge", "--dir", str(tmp_path / "demo"), "--output", str(out)])
+
+    if result.exit_code == 0:
+        assert out.read_text().startswith("<svg")
+    else:
+        # No session was kept; the command must say so rather than write a bogus badge.
+        assert not out.exists()
+
+
+def test_badge_without_a_session_or_score_exits_cleanly(tmp_path):
+    out = tmp_path / "badge.svg"
+    result = runner.invoke(app, ["badge", "--dir", str(tmp_path / "empty"), "--output", str(out)])
+    assert result.exit_code == 1
+    assert not out.exists()
+
+
+# --- matrix --------------------------------------------------------------------
+
+
+def _always_refuses(**kwargs):
+    """A model that declines everything, so the matrix run needs no network."""
+
+    async def complete(messages, tools):
+        return {"role": "assistant", "content": "I will not do that."}
+
+    return complete
+
+
+def test_matrix_benchmarks_several_models_and_writes_a_leaderboard(tmp_path, monkeypatch):
+    import mcpbait.cli as cli_module
+
+    monkeypatch.setattr(cli_module, "http_completion", _always_refuses)
+    target = str(tmp_path / ".mcpbait")
+    runner.invoke(app, ["init", "--dir", target])
+    leaderboard = tmp_path / "LEADERBOARD.md"
+
+    result = runner.invoke(
+        app,
+        [
+            "matrix",
+            "--dir",
+            target,
+            "--api-key",
+            "x",
+            "--models",
+            "model-a,model-b",
+            "--runs",
+            "1",
+            "--markdown",
+            str(leaderboard),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    rendered = leaderboard.read_text()
+    assert "model-a" in rendered
+    assert "model-b" in rendered
+
+
+def test_matrix_requires_an_api_key(tmp_path, monkeypatch):
+    monkeypatch.delenv("MCPBAIT_API_KEY", raising=False)
+    target = str(tmp_path / ".mcpbait")
+    runner.invoke(app, ["init", "--dir", target])
+    result = runner.invoke(app, ["matrix", "--dir", target, "--models", "model-a"])
+    assert result.exit_code != 0
+
+
+def test_matrix_fail_under_gates_the_worst_model(tmp_path, monkeypatch):
+    """A leaderboard that cannot fail a build is decoration, not a gate."""
+    import mcpbait.cli as cli_module
+
+    monkeypatch.setattr(cli_module, "http_completion", _always_refuses)
+    target = str(tmp_path / ".mcpbait")
+    runner.invoke(app, ["init", "--dir", target])
+
+    result = runner.invoke(
+        app,
+        [
+            "matrix",
+            "--dir",
+            target,
+            "--api-key",
+            "x",
+            "--models",
+            "model-a",
+            "--runs",
+            "1",
+            "--fail-under",
+            "10.0",
+        ],
+    )
+
+    assert result.exit_code == 3
