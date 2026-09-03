@@ -2,6 +2,7 @@ import json
 
 from typer.testing import CliRunner
 
+from mcpbait import __version__
 from mcpbait.cli import app
 
 runner = CliRunner()
@@ -408,3 +409,10 @@ def test_attack_rejects_an_unknown_collision_policy(tmp_path):
         app, ["attack", "--dir", target, "--api-key", "x", "--collision", "nope"]
     )
     assert result.exit_code == 2
+
+
+def test_version_flag_prints_the_version_and_exits_clean():
+    """The first question anyone asks of a CLI, and the bug template asks for it."""
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    assert __version__ in result.stdout

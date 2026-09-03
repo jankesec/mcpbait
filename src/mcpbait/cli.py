@@ -42,6 +42,28 @@ DirOption = Annotated[Path, typer.Option("--dir", help="mcpbait state directory.
 DEFAULT_DIR = Path(".mcpbait")
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        # stdout is safe here: --version never runs under stdio transport.
+        print(f"mcpbait {__version__}")
+        raise typer.Exit
+
+
+@app.callback()
+def main(
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            callback=_version_callback,
+            is_eager=True,
+            help="Show the version and exit.",
+        ),
+    ] = False,
+) -> None:
+    """Prove whether an MCP-speaking agent can be hijacked by a malicious server."""
+
+
 def _load_state(directory: Path) -> dict:
     state_file = directory / "state.json"
     if not state_file.is_file():

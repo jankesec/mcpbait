@@ -49,8 +49,8 @@ body:
     attributes:
       label: mcpbait version
       description: >
-        Output of `python -c "import mcpbait; print(mcpbait.__version__)"`. If you
-        installed from a checkout rather than PyPI, give the commit instead.
+        Output of `mcpbait --version`. If you installed from a checkout rather
+        than PyPI, give the commit instead.
       placeholder: "0.2.0"
     validations:
       required: true
