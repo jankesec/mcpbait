@@ -17,6 +17,10 @@ in a decoy workspace, and when an agent leaks it, it hands the secret back to mc
 an ordinary tool argument — which lands in mcpbait's own log. No C2, no DNS canary, no
 internet.
 
+<p align="center">
+  <img src="docs/demo.gif" alt="mcpbait demo animation" width="800">
+</p>
+
 ```
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ time     ┃ event          ┃ module           ┃ detail                                      ┃

@@ -11,3 +11,4 @@ build/
 
 # Internal working documents, kept locally
 docs/superpowers/
+.coverage
