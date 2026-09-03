@@ -1,6 +1,7 @@
 import json
 
-from mcpbait.engine import Session, latest_session, load_session
+from mcpbait.engine import Session, confirm_persistence, latest_session, load_session
+from mcpbait.modules.base import AttackModule
 from mcpbait.types import ToolCall, Verdict
 
 
@@ -77,3 +78,56 @@ def test_module_exception_is_recorded_not_raised(tmp_path, payload_ctx):
     session = Session(tmp_path, modules=[Boom()], ctx=payload_ctx)
     assert session.verdicts()["boom"] is Verdict.NOT_RUN
     assert any(e.kind == "module_error" for e in session.events)
+
+
+def test_confirm_persistence_records_only_the_module_that_left_something(tmp_path, payload_ctx):
+    """The runner asks the whole module list rather than one module by name."""
+
+    class Ghost(AttackModule):
+        id = "ghost"
+
+        def payload(self, ctx):
+            return []
+
+    class Squatter(Ghost):
+        id = "squatter"
+
+        def check_persistence(self, workspace):
+            return True
+
+    session = Session(tmp_path, modules=[Ghost(), Squatter()], ctx=payload_ctx)
+    confirm_persistence(session, payload_ctx.workspace)
+    confirmed = [e for e in session.events if e.kind == "persistence_confirmed"]
+    assert [e.module_id for e in confirmed] == ["squatter"]
+    assert confirmed[0].detail["workspace"] == str(payload_ctx.workspace)
+
+
+def test_confirm_persistence_survives_a_module_that_raises(tmp_path, payload_ctx):
+    class Boom(AttackModule):
+        id = "boom"
+
+        def payload(self, ctx):
+            return []
+
+        def check_persistence(self, workspace):
+            raise RuntimeError("kaboom")
+
+    session = Session(tmp_path, modules=[Boom()], ctx=payload_ctx)
+    confirm_persistence(session, payload_ctx.workspace)
+    errors = [e for e in session.events if e.kind == "module_error"]
+    assert [e.detail["stage"] for e in errors] == ["check_persistence"]
+    assert not any(e.kind == "persistence_confirmed" for e in session.events)
+
+
+def test_replayed_session_gets_an_empty_context_rather_than_none(tmp_path, payload_ctx):
+    """A replayed log has no live canaries, but consumers still get a real context."""
+    session = Session(tmp_path, modules=[], ctx=payload_ctx)
+    session.record("canary_hit", "m", {"canary": "aws_key"})
+    session.close()
+
+    replayed = load_session(tmp_path / f"{session.id}.jsonl")
+
+    assert replayed.ctx is not None
+    assert replayed.ctx.canaries == {}
+    assert replayed.ctx.workspace == tmp_path
+    assert [e.kind for e in replayed.events] == ["canary_hit"]

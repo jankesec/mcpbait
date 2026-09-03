@@ -24,7 +24,7 @@ class Session:
         self,
         session_dir: Path,
         modules: Sequence[Any],
-        ctx: PayloadContext | None,
+        ctx: PayloadContext,
         session_id: str | None = None,
         readonly: bool = False,
     ) -> None:
@@ -56,7 +56,7 @@ class Session:
         process, so an exfiltrated secret arrives here as an ordinary argument.
         """
         self.record("tool_call", module_id, {"name": call.name, "arguments": call.arguments})
-        canaries = self.ctx.canaries if self.ctx else {}
+        canaries = self.ctx.canaries
         hits = detect(call.searchable_text(), canaries)
         for hit in hits:
             self.record(
@@ -103,10 +103,32 @@ class Session:
             self._handle = None
 
 
+def confirm_persistence(session: Session, workspace: Path) -> None:
+    """Ask every module whether it left something behind, and record what did.
+
+    Asking the whole module list rather than reaching for memory_poisoning by name
+    is what lets a third-party persistence module take part in the kill chain.
+    """
+    for module in session.modules:
+        try:
+            persisted = module.check_persistence(workspace)
+        # A bad third-party module must not sink a run that is already finished.
+        except Exception as error:
+            session.record(
+                "module_error", module.id, {"stage": "check_persistence", "error": repr(error)}
+            )
+            continue
+        if persisted:
+            session.record("persistence_confirmed", module.id, {"workspace": str(workspace)})
+
+
 def load_session(path: Path, modules: Sequence[Any] = ()) -> Session:
     """Rebuild a read-only session from its JSONL log."""
     path = Path(path)
-    session = Session(path.parent, modules, ctx=None, session_id=path.stem, readonly=True)
+    # A replayed log has no live canaries and no decoy workspace to speak of, but
+    # handing consumers a real context beats making every one of them test for None.
+    ctx = PayloadContext(canaries={}, workspace=path.parent)
+    session = Session(path.parent, modules, ctx=ctx, session_id=path.stem, readonly=True)
     session.events = [
         Event.from_json(line)
         for line in path.read_text(encoding="utf-8").splitlines()

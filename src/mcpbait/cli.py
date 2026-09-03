@@ -23,7 +23,7 @@ from mcpbait.agent import COLLISION_POLICIES, DEFAULT_TASK, http_completion, run
 from mcpbait.aggregate import aggregate, render_aggregate, worst_case_score
 from mcpbait.beacon import Beacon
 from mcpbait.canary import mint_set
-from mcpbait.engine import Session, latest_session, load_session
+from mcpbait.engine import Session, confirm_persistence, latest_session, load_session
 from mcpbait.matrix import render_matrix_markdown, render_matrix_table
 from mcpbait.modules import REGISTRY, all_ids, get_modules
 from mcpbait.naive import run_naive_agent
@@ -338,9 +338,7 @@ def demo(
         finally:
             beacon.stop()
 
-        persistence = REGISTRY["memory_poisoning"]()
-        if persistence.check_persistence(workspace):
-            session.record("persistence_confirmed", persistence.id, {"workspace": str(workspace)})
+        confirm_persistence(session, workspace)
         session.close()
 
         print_report(session, console)
@@ -432,9 +430,7 @@ def attack(
         finally:
             beacon.stop()
 
-        persistence = REGISTRY["memory_poisoning"]()
-        if persistence.check_persistence(workspace):
-            session.record("persistence_confirmed", persistence.id, {"workspace": str(workspace)})
+        confirm_persistence(session, workspace)
         session.close()
 
         if failed:
@@ -516,9 +512,7 @@ def report(
         state = json.loads(state_file.read_text(encoding="utf-8"))
         workspace = Path(state["workspace"])
         session.ctx = PayloadContext(canaries=state["canaries"], workspace=workspace)
-        persistence = REGISTRY["memory_poisoning"]()
-        if persistence.check_persistence(workspace):
-            session.record("persistence_confirmed", persistence.id, {"workspace": str(workspace)})
+        confirm_persistence(session, workspace)
 
     print_report(session, Console())
     if json_path:
@@ -626,11 +620,7 @@ def matrix(
             finally:
                 beacon.stop()
 
-            persistence = REGISTRY["memory_poisoning"]()
-            if persistence.check_persistence(workspace):
-                session.record(
-                    "persistence_confirmed", persistence.id, {"workspace": str(workspace)}
-                )
+            confirm_persistence(session, workspace)
             session.close()
 
             if failed:

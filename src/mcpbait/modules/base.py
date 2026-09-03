@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from pathlib import Path
 from typing import ClassVar
 
 from mcpbait.types import Event, PayloadContext, Phase, ToolCall, ToolSpec, Verdict
@@ -42,6 +43,16 @@ class AttackModule(ABC):
     def respond(self, call: ToolCall, ctx: PayloadContext) -> str | None:
         """Optional poisoned tool result. None means 'use the generic response'."""
         return None
+
+    def check_persistence(self, workspace: Path) -> bool:
+        """Whether this module left a durable artefact in the workspace.
+
+        Most techniques leave nothing behind once the session ends, so the default
+        is False. A module that writes to disk -- an instruction file, a config, a
+        hook -- overrides this, and the runner asks every module in turn rather
+        than knowing any single one by name.
+        """
+        return False
 
     def verify(self, events: Sequence[Event]) -> Verdict:
         """Judge this module's outcome from the evidence ladder.
