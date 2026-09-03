@@ -54,6 +54,33 @@ not a benchmark. Then point it at the agent you actually care about:
 uvx mcpbait init
 ```
 
+### 1-Click Auto-Configuration (Claude Desktop, Cursor, Windsurf, Cline)
+
+Instead of editing config files by hand, install the disguised server directly:
+
+```bash
+# Install disguised server into Claude Desktop
+uvx mcpbait install --client claude-desktop --as local-indexer
+
+# Or into Cursor
+uvx mcpbait install --client cursor --as local-indexer
+```
+
+Restart your client, run any ordinary task ("summarise this workspace"), then inspect the evidence:
+
+```bash
+uvx mcpbait report --html report.html
+```
+
+To clean up when done:
+```bash
+uvx mcpbait uninstall --client claude-desktop --as local-indexer
+```
+
+### Manual Configuration
+
+If configuring by hand:
+
 ```bash
 uvx mcpbait config --as docs-search
 ```
@@ -62,11 +89,7 @@ uvx mcpbait config --as docs-search
 has been tipped off, and a tipped-off agent is not the one you are trying to measure.
 
 Paste the printed block into your agent's MCP configuration, run any ordinary task
-("summarise this repo"), then:
-
-```bash
-uvx mcpbait report
-```
+("summarise this repo"), then run `uvx mcpbait report`.
 
 `init` creates an isolated decoy workspace containing fake credentials. mcpbait never
 reads, scans or transmits your real files.
@@ -97,17 +120,51 @@ defence recommendation into a measurement. Against `deepseek-v4-flash`, three ru
 Same model, same task, same payloads. Namespacing removed the only technique that
 landed. Every other module was `IGNORED` in both — this model did not exfiltrate.
 
-## Use it in CI
+## Multi-Model Benchmarks
 
-If you ship an agent, gate the build on it:
+Benchmark multiple models or agents side-by-side to generate a comparative resilience matrix and leaderboard:
 
 ```bash
-uvx mcpbait attack --runs 5 --fail-under 7 --json mcpbait-report.json
+MCPBAIT_API_KEY=... uvx mcpbait matrix \
+  --models "gpt-4o,gpt-4o-mini,claude-3-5-sonnet" \
+  --runs 3 \
+  --markdown leaderboard.md
 ```
 
-Exit code 3 means the worst-case score fell below the threshold; exit code 4 means
-every run failed and nothing was measured. Bear in mind agents are
-non-deterministic — treat a single run as a smoke test, not a proof of safety.
+This generates a formatted Markdown leaderboard table with worst-case resilience scores, grade assessments, and technique-by-technique breakdowns.
+
+## DevSecOps, SARIF & CI Integration
+
+### GitHub Action
+
+Use `mcpbait` directly in GitHub Actions with automated SARIF annotations in the GitHub Security tab:
+
+```yaml
+- name: Run mcpbait Security Scan
+  uses: jankesec/mcpbait@v0.2.0
+  with:
+    command: 'demo'
+    fail-under: '7.0'
+    sarif-output: 'mcpbait-results.sarif'
+    html-output: 'mcpbait-report.html'
+
+- name: Upload SARIF to GitHub Security
+  uses: github/codeql-action/upload-sarif@v3
+  if: always()
+  with:
+    sarif_file: 'mcpbait-results.sarif'
+```
+
+### CLI CI Gates & Executive Reports
+
+Generate standalone dark-mode HTML executive dashboards or SARIF 2.1.0 findings:
+
+```bash
+# Generate Dark-Mode Executive HTML Dashboard & SARIF
+uvx mcpbait report --html audit-report.html --sarif audit-findings.sarif --fail-under 7.0
+```
+
+Exit code `3` indicates a score below threshold; exit code `4` indicates failed runs.
 
 ## What it tests
 

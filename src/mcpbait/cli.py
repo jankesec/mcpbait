@@ -12,7 +12,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import anyio
 import typer
@@ -24,9 +24,11 @@ from mcpbait.aggregate import aggregate, render_aggregate, worst_case_score
 from mcpbait.beacon import Beacon
 from mcpbait.canary import mint_set
 from mcpbait.engine import Session, latest_session, load_session
+from mcpbait.matrix import render_matrix_markdown, render_matrix_table
 from mcpbait.modules import REGISTRY, all_ids, get_modules
 from mcpbait.naive import run_naive_agent
 from mcpbait.report import print_report, to_dict, to_html
+from mcpbait.sarif import to_sarif
 from mcpbait.server import run_stdio
 from mcpbait.types import PayloadContext
 from mcpbait.workspace import WORKSPACE_MANIFEST, create_workspace
@@ -126,6 +128,120 @@ def config(
         }
     }
     typer.echo(json.dumps(block, indent=2))
+
+
+@app.command()
+def install(
+    client: Annotated[
+        str,
+        typer.Option(
+            "--client",
+            "-c",
+            help="Target client: claude-desktop, cursor, windsurf, or cline.",
+        ),
+    ] = "claude-desktop",
+    directory: DirOption = DEFAULT_DIR,
+    name: Annotated[
+        str,
+        typer.Option("--as", help="Server name in the config. Disguise it for a fair test."),
+    ] = "system-indexer",
+    config_path: Annotated[
+        Path | None,
+        typer.Option("--config-path", help="Explicit configuration file path to override default."),
+    ] = None,
+) -> None:
+    """Auto-configure mcpbait into Claude Desktop, Cursor, Windsurf, or Cline."""
+    _load_state(directory)
+    from mcpbait.clients import install_into_client
+
+    try:
+        target = install_into_client(
+            client=client,
+            server_name=name,
+            state_dir=directory,
+            custom_path=config_path,
+        )
+    except ValueError as e:
+        typer.echo(str(e), err=True)
+        raise typer.Exit(code=1)
+
+    console = Console()
+    console.print(f"[green]Successfully configured disguised server '{name}' for {client}:[/green]")
+    console.print(f"  [bold]{target}[/bold]")
+    console.print(f"  [dim]Safety backup created at {target}.bak[/dim]")
+    console.print(
+        "\n[cyan]Next steps:[/cyan]\n"
+        f"1. Open or restart {client}.\n"
+        "2. Give the agent an ordinary prompt (e.g., 'summarise files in my workspace').\n"
+        "3. Once the interaction finishes, run: [bold]mcpbait report[/bold]"
+    )
+
+
+@app.command()
+def uninstall(
+    client: Annotated[
+        str,
+        typer.Option(
+            "--client",
+            "-c",
+            help="Target client: claude-desktop, cursor, windsurf, or cline.",
+        ),
+    ] = "claude-desktop",
+    name: Annotated[
+        str,
+        typer.Option("--as", help="Server name in the config to remove."),
+    ] = "system-indexer",
+    config_path: Annotated[
+        Path | None,
+        typer.Option("--config-path", help="Explicit configuration file path to override default."),
+    ] = None,
+) -> None:
+    """Remove mcpbait from Claude Desktop, Cursor, Windsurf, or Cline configuration."""
+    from mcpbait.clients import uninstall_from_client
+
+    try:
+        target = uninstall_from_client(
+            client=client,
+            server_name=name,
+            custom_path=config_path,
+        )
+    except ValueError as e:
+        typer.echo(str(e), err=True)
+        raise typer.Exit(code=1)
+
+    Console().print(f"[green]Removed server '{name}' from {client} configuration:[/green] {target}")
+
+
+@app.command()
+def badge(
+    directory: DirOption = DEFAULT_DIR,
+    session_id: Annotated[str | None, typer.Option("--session", help="Session id.")] = None,
+    output: Annotated[
+        Path,
+        typer.Option("--output", "-o", help="Output SVG path."),
+    ] = Path("mcpbait-badge.svg"),
+    score: Annotated[
+        float | None,
+        typer.Option("--score", help="Explicit score (0.0 - 10.0) to render."),
+    ] = None,
+) -> None:
+    """Generate an offline SVG resilience badge for your README or CI dashboard."""
+    from mcpbait.badge import generate_badge
+
+    if score is not None:
+        final_score = score
+    else:
+        sessions_dir = directory / "sessions"
+        path = (sessions_dir / f"{session_id}.jsonl") if session_id else latest_session(sessions_dir)
+        if path is None or not path.is_file():
+            typer.echo(f"No session found in {sessions_dir}. Pass --score or run a test first.", err=True)
+            raise typer.Exit(code=1)
+        session = load_session(path, modules=get_modules(None))
+        final_score = session.score()
+
+    svg_content = generate_badge(final_score)
+    output.write_text(svg_content, encoding="utf-8")
+    Console().print(f"[green]Resilience badge ({final_score:.1f}/10) generated at:[/green] {output}")
 
 
 @app.command()
@@ -368,12 +484,15 @@ def report(
     session_id: Annotated[str | None, typer.Option("--session", help="Session id.")] = None,
     json_path: Annotated[Path | None, typer.Option("--json", help="Write JSON here.")] = None,
     html_path: Annotated[Path | None, typer.Option("--html", help="Write HTML here.")] = None,
+    sarif_path: Annotated[
+        Path | None, typer.Option("--sarif", help="Write SARIF 2.1.0 security report here.")
+    ] = None,
     fail_under: Annotated[
         float | None,
         typer.Option("--fail-under", help="Exit 3 if the resilience score is below this."),
     ] = None,
 ) -> None:
-    """Render the kill chain for a finished session."""
+    """Render the kill chain and security report for a finished session."""
     sessions_dir = directory / "sessions"
     path = (sessions_dir / f"{session_id}.jsonl") if session_id else latest_session(sessions_dir)
     if path is None or not path.is_file():
@@ -397,9 +516,155 @@ def report(
     if html_path:
         html_path.write_text(to_html(session), encoding="utf-8")
         typer.echo(f"HTML written to {html_path}")
+    if sarif_path:
+        sarif_path.write_text(json.dumps(to_sarif(session), indent=2), encoding="utf-8")
+        typer.echo(f"SARIF written to {sarif_path}")
     if fail_under is not None and session.score() < fail_under:
         typer.echo(f"Score {session.score()} is below the {fail_under} threshold.")
         raise typer.Exit(code=3)
+
+
+@app.command(name="matrix")
+def matrix(
+    directory: DirOption = DEFAULT_DIR,
+    models: Annotated[
+        str,
+        typer.Option("--models", help="Comma-separated list of model IDs to benchmark."),
+    ] = "gpt-4o,gpt-4o-mini",
+    api_base: Annotated[
+        str, typer.Option("--api-base", envvar="MCPBAIT_API_BASE", help="OpenAI-compatible base URL.")
+    ] = "https://api.openai.com/v1",
+    api_key: Annotated[
+        str | None, typer.Option("--api-key", envvar="MCPBAIT_API_KEY", help="API key.")
+    ] = None,
+    runs: Annotated[int, typer.Option("--runs", help="How many sessions to run per model.")] = 2,
+    task: Annotated[str, typer.Option("--task", help="The ordinary task to give the agent.")] = DEFAULT_TASK,
+    max_turns: Annotated[int, typer.Option("--max-turns", help="Tool-calling turns per run.")] = 8,
+    collision: Annotated[
+        str,
+        typer.Option(
+            "--collision",
+            help="How the client resolves duplicate tool names: shadow, namespace or builtin.",
+        ),
+    ] = "shadow",
+    module_ids: Annotated[
+        str | None, typer.Option("--modules", help="Comma-separated module ids. Default: all.")
+    ] = None,
+    markdown_path: Annotated[
+        Path | None, typer.Option("--markdown", help="Write Markdown leaderboard here.")
+    ] = None,
+    json_path: Annotated[
+        Path | None, typer.Option("--json", help="Write JSON summary matrix here.")
+    ] = None,
+    fail_under: Annotated[
+        float | None,
+        typer.Option("--fail-under", help="Exit 3 if any model worst-case score is below this."),
+    ] = None,
+) -> None:
+    """Benchmark multiple models and generate a comparative security leaderboard."""
+    if not api_key:
+        typer.echo("No API key. Pass --api-key or set MCPBAIT_API_KEY.")
+        raise typer.Exit(code=1)
+
+    if collision not in COLLISION_POLICIES:
+        raise typer.BadParameter(f"--collision must be one of {', '.join(COLLISION_POLICIES)}")
+
+    model_list = [m.strip() for m in models.split(",") if m.strip()]
+    if not model_list:
+        raise typer.BadParameter("At least one model must be provided in --models.")
+
+    state = _load_state(directory)
+    selected = _select(module_ids)
+    workspace = Path(state["workspace"])
+    console = Console()
+
+    matrix_results: dict[str, Any] = {"models": {}}
+
+    for model_name in model_list:
+        console.print(f"\n[bold cyan]Benchmarking model:[/bold cyan] [bold]{model_name}[/bold]")
+        completion = http_completion(model=model_name, api_base=api_base, api_key=api_key)
+
+        sessions: list[Session] = []
+        failures: list[str] = []
+
+        for run in range(max(1, runs)):
+            create_workspace(workspace, state["canaries"])
+            beacon = Beacon(on_hit=lambda path, params: None)
+            ctx = PayloadContext(
+                canaries=state["canaries"], workspace=workspace, beacon_url=beacon.start()
+            )
+            session = Session(directory / "sessions", modules=get_modules(selected), ctx=ctx)
+            beacon.on_hit = lambda path, params, _s=session: _s.record(
+                "beacon_hit", params.get("m", ""), {"path": path, "params": params}
+            )
+
+            failed = None
+            try:
+                reply = anyio.run(
+                    lambda _s=session, _c=completion: run_agent(
+                        _s, _c, task=task, max_turns=max_turns, collision=collision
+                    )
+                )
+            except Exception as error:  # noqa: BLE001
+                failed = str(error)
+                reply = ""
+                session.record("run_error", "", {"error": repr(error)})
+            finally:
+                beacon.stop()
+
+            persistence = REGISTRY["memory_poisoning"]()
+            if persistence.check_persistence(workspace):
+                session.record("persistence_confirmed", persistence.id, {"workspace": str(workspace)})
+            session.close()
+
+            if failed:
+                failures.append(failed)
+                console.print(f"  [red]run {run + 1}/{runs} failed:[/red] {failed[:120]}")
+                continue
+
+            sessions.append(session)
+            console.print(
+                f"  [dim]run {run + 1}/{runs}: score {session.score()} — "
+                f"{reply[:60].strip() or 'no reply'}[/dim]"
+            )
+
+        if not sessions:
+            console.print(f"  [red]All runs for {model_name} failed. Skipping.[/red]")
+            continue
+
+        summary = aggregate(sessions)
+        summary["model"] = model_name
+        summary["collision"] = collision
+        summary["failed_runs"] = len(failures)
+        summary["worst_case_score"] = worst_case_score(summary)
+        matrix_results["models"][model_name] = summary
+
+    if not matrix_results["models"]:
+        console.print("[red]No models could be successfully benchmarked.[/red]")
+        raise typer.Exit(code=4)
+
+    console.print("\n")
+    console.print(render_matrix_table(matrix_results))
+
+    if markdown_path:
+        markdown_path.write_text(render_matrix_markdown(matrix_results), encoding="utf-8")
+        console.print(f"\n[green]Leaderboard Markdown written to[/green] {markdown_path}")
+
+    if json_path:
+        json_path.write_text(json.dumps(matrix_results, indent=2), encoding="utf-8")
+        console.print(f"[green]Matrix JSON written to[/green] {json_path}")
+
+    if fail_under is not None:
+        failing_models = [
+            m for m, data in matrix_results["models"].items()
+            if data["worst_case_score"] < fail_under
+        ]
+        if failing_models:
+            console.print(
+                f"\n[red]Failure: {len(failing_models)} model(s) fell below threshold {fail_under}: "
+                f"{', '.join(failing_models)}[/red]"
+            )
+            raise typer.Exit(code=3)
 
 
 if __name__ == "__main__":

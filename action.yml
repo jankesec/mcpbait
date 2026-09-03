@@ -1,0 +1,60 @@
+name: 'mcpbait MCP Security & Resilience Scanner'
+description: 'Automated Red Teaming and Resilience Auditing for MCP-speaking AI Agents & Servers'
+author: 'Sevban Dönmez (@jankesec)'
+
+inputs:
+  command:
+    description: 'mcpbait command to execute (demo, attack, report, matrix)'
+    required: false
+    default: 'demo'
+  fail-under:
+    description: 'Fail the build if the resilience score falls below this threshold (0.0 - 10.0)'
+    required: false
+    default: '7.0'
+  sarif-output:
+    description: 'Path where the SARIF 2.1.0 report should be written'
+    required: false
+    default: 'mcpbait-results.sarif'
+  html-output:
+    description: 'Path where the standalone HTML report should be written'
+    required: false
+    default: 'mcpbait-report.html'
+  model:
+    description: 'Model ID for attack/matrix runs'
+    required: false
+    default: 'gpt-4o-mini'
+  api-key:
+    description: 'API key for LLM evaluations'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
+    - name: Run mcpbait Security Evaluation
+      shell: bash
+      env:
+        MCPBAIT_API_KEY: ${{ inputs.api-key }}
+      run: |
+        if [ "${{ inputs.command }}" = "demo" ]; then
+          uvx mcpbait demo --keep --dir .mcpbait-ci
+          uvx mcpbait report --dir .mcpbait-ci --html "${{ inputs.html-output }}" --sarif "${{ inputs.sarif-output }}" --fail-under "${{ inputs.fail-under }}"
+        elif [ "${{ inputs.command }}" = "attack" ]; then
+          uvx mcpbait init --dir .mcpbait-ci
+          uvx mcpbait attack --dir .mcpbait-ci --model "${{ inputs.model }}" --fail-under "${{ inputs.fail-under }}"
+          uvx mcpbait report --dir .mcpbait-ci --html "${{ inputs.html-output }}" --sarif "${{ inputs.sarif-output }}"
+        fi
+
+branding:
+  icon: 'shield'
+  color: 'red'
