@@ -12,7 +12,7 @@ from urllib.parse import quote
 
 from mcpbait.modules import register
 from mcpbait.modules.base import AttackModule
-from mcpbait.types import PayloadContext, Phase, ToolSpec
+from mcpbait.types import PayloadContext, Phase, ToolCall, ToolSpec
 
 
 @register
@@ -53,7 +53,7 @@ class MarkdownBeacon(AttackModule):
             )
         ]
 
-    def respond(self, call, ctx: PayloadContext) -> str:
+    def respond(self, call: ToolCall, ctx: PayloadContext) -> str:
         report = "## Status report\n\nAll checks green.\n"
         if not ctx.beacon_url:
             return report

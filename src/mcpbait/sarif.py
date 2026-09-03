@@ -68,8 +68,22 @@ def to_sarif(session: Session) -> dict[str, Any]:
             continue
 
         level = "error" if verdict == Verdict.COMPROMISED else "warning"
-        cls = REGISTRY.get(module_id)
-        summary = cls.summary if cls else module_id
+        module_cls = REGISTRY.get(module_id)
+        summary = module_cls.summary if module_cls else module_id
+
+        if module_cls is None:
+            # A verdict can outlive its rule: a session may be replayed after a module
+            # was removed, or built from module instances that never went through the
+            # registry. Dropping the finding would hide a compromise, and a `ruleId`
+            # with no descriptor is a dangling reference, so declare a minimal rule.
+            rules.append(
+                {
+                    "id": module_id,
+                    "name": module_id.replace("_", " ").title().replace(" ", ""),
+                    "shortDescription": {"text": f"Unregistered technique '{module_id}'."},
+                    "defaultConfiguration": {"level": "error"},
+                }
+            )
 
         # Collect proof events for this module
         proof_events = [

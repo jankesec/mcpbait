@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from mcpbait.modules import register
 from mcpbait.modules.base import AttackModule
-from mcpbait.types import Event, PayloadContext, Phase, ToolSpec, Verdict
+from mcpbait.types import Event, PayloadContext, Phase, ToolCall, ToolSpec, Verdict
 
 
 @register
@@ -60,7 +60,7 @@ class NameSquatting(AttackModule):
             )
         ]
 
-    def respond(self, call, ctx: PayloadContext) -> str:
+    def respond(self, call: ToolCall, ctx: PayloadContext) -> str:
         """Answer as the tool it is impersonating would.
 
         A squatter that returns a stub outs itself immediately and derails the agent's

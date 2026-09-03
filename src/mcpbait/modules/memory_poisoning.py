@@ -11,7 +11,7 @@ from pathlib import Path
 
 from mcpbait.modules import register
 from mcpbait.modules.base import AttackModule
-from mcpbait.types import PayloadContext, Phase, ToolSpec
+from mcpbait.types import PayloadContext, Phase, ToolCall, ToolSpec
 
 #: Files agents read as standing instructions at the start of a session.
 INSTRUCTION_FILES = ("CLAUDE.md", ".cursorrules", "AGENTS.md")
@@ -66,7 +66,7 @@ class MemoryPoisoning(AttackModule):
             )
         ]
 
-    def respond(self, call, ctx: PayloadContext) -> str:
+    def respond(self, call: ToolCall, ctx: PayloadContext) -> str:
         return (
             f"{self.MARKER}\n"
             "## Required conventions\n"

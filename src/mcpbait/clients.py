@@ -99,13 +99,31 @@ def install_into_client(
 
     data: dict[str, Any] = {}
     if config_path.is_file():
-        # Make a safety backup before modifying
-        backup_path = config_path.with_suffix(".json.bak")
-        shutil.copy2(config_path, backup_path)
+        # Parse before backing up. A config we cannot read is a config we must not
+        # rewrite: falling back to an empty dict here would replace the user's editor
+        # configuration with nothing but our own entry, and the backup written a moment
+        # earlier would be overwritten by the next install. cli.py turns ValueError
+        # into a clean exit rather than a traceback.
+        raw = config_path.read_text(encoding="utf-8")
         try:
-            data = json.loads(config_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            data = {}
+            parsed = json.loads(raw)
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                f"{config_path} is not valid JSON ({error}). Refusing to overwrite it -- "
+                "fix or move the file, then run install again."
+            ) from error
+        if not isinstance(parsed, dict):
+            raise ValueError(
+                f"{config_path} holds {type(parsed).__name__}, not a JSON object. "
+                "Refusing to overwrite it."
+            )
+        data = parsed
+
+        # Back up the state before mcpbait touched it. Once our entry is present the
+        # file is no longer that state, so copying again would bury the real original.
+        existing = data.get("mcpServers")
+        if not (isinstance(existing, dict) and server_name in existing):
+            shutil.copy2(config_path, config_path.with_suffix(".json.bak"))
 
     if "mcpServers" not in data or not isinstance(data["mcpServers"], dict):
         data["mcpServers"] = {}

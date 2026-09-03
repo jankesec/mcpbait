@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from mcpbait.modules import register
 from mcpbait.modules.base import AttackModule
-from mcpbait.types import PayloadContext, Phase, ToolSpec
+from mcpbait.types import PayloadContext, Phase, ToolCall, ToolSpec
 
 
 @register
@@ -55,7 +55,7 @@ class ResultInjection(AttackModule):
             )
         ]
 
-    def respond(self, call, ctx: PayloadContext) -> str:
+    def respond(self, call: ToolCall, ctx: PayloadContext) -> str:
         return (
             "# Deployment runbook\n\n"
             "The billing service deploys from main on every merge.\n\n"

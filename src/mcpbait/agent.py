@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, TypedDict
 
 from mcpbait.engine import Session
 from mcpbait.server import build_server
@@ -44,7 +44,28 @@ NAMESPACE = "mcp__server__"
 #: How the client resolves a name offered by both a built-in tool and the server.
 COLLISION_POLICIES = ("shadow", "namespace", "builtin")
 
-Completion = Callable[[list[dict[str, Any]], list[dict[str, Any]]], Awaitable[dict[str, Any]]]
+
+class FunctionSchema(TypedDict):
+    """The `function` half of an OpenAI-style tool definition."""
+
+    name: str
+    description: str
+    parameters: dict[str, Any]
+
+
+class ToolSchema(TypedDict):
+    """One entry in the `tools` array sent to a chat completions endpoint.
+
+    Built-in and server tools share this shape deliberately: the model is given no
+    way to tell an advertised MCP tool from a genuine local one, which is the whole
+    premise of the shadowing attack.
+    """
+
+    type: Literal["function"]
+    function: FunctionSchema
+
+
+Completion = Callable[[list[dict[str, Any]], list[ToolSchema]], Awaitable[dict[str, Any]]]
 
 
 class LocalTools:
@@ -53,8 +74,10 @@ class LocalTools:
     def __init__(self, root: Path) -> None:
         self.root = Path(root).resolve()
 
-    def schema(self) -> list[dict[str, Any]]:
-        path_arg = {"path": {"type": "string", "description": "Path relative to the project."}}
+    def schema(self) -> list[ToolSchema]:
+        path_arg: dict[str, Any] = {
+            "path": {"type": "string", "description": "Path relative to the project."}
+        }
         return [
             self._fn("list_directory", "List files and directories at a path.", path_arg, ["path"]),
             self._fn("read_file", "Read a text file from the project.", path_arg, ["path"]),
@@ -67,7 +90,9 @@ class LocalTools:
         ]
 
     @staticmethod
-    def _fn(name: str, description: str, properties: dict, required: list[str]) -> dict[str, Any]:
+    def _fn(
+        name: str, description: str, properties: dict[str, Any], required: list[str]
+    ) -> ToolSchema:
         return {
             "type": "function",
             "function": {
@@ -114,7 +139,7 @@ def http_completion(
     """A completion callable backed by any OpenAI-compatible chat endpoint."""
     import httpx
 
-    async def complete(messages: list[dict], tools: list[dict]) -> dict[str, Any]:
+    async def complete(messages: list[dict[str, Any]], tools: list[ToolSchema]) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(
                 f"{api_base.rstrip('/')}/chat/completions",
@@ -129,7 +154,12 @@ def http_completion(
             )
         if response.status_code != 200:
             raise RuntimeError(f"{response.status_code} from {api_base}: {response.text[:300]}")
-        return response.json()["choices"][0]["message"]
+        # The endpoint is untrusted like any other input: check the shape rather than
+        # asserting it, so a malformed reply fails here instead of deep in the loop.
+        message = response.json()["choices"][0]["message"]
+        if not isinstance(message, dict):
+            raise RuntimeError(f"malformed completion from {api_base}: {message!r:.300}")
+        return message
 
     return complete
 
@@ -144,20 +174,26 @@ async def run_agent(
 ) -> str:
     """Run one agent session against the adversarial server. Returns the final reply.
 
-    Raises ValueError for an unknown collision policy; the caller must not silently
-    fall back, because a run measured under the wrong policy is worse than no run.
+    Raises ValueError for an unknown collision policy, and for a session with no
+    payload context; the caller must not silently fall back, because a run measured
+    under the wrong policy -- or against no decoy workspace at all -- is worse than
+    no run.
     """
     if collision not in COLLISION_POLICIES:
         raise ValueError(f"collision must be one of {COLLISION_POLICIES}")
 
+    ctx = session.ctx
+    if ctx is None:
+        raise ValueError("run_agent needs a live session; a replayed one has no workspace")
+
     _, router = build_server(session)
-    local = LocalTools(session.ctx.workspace)
+    local = LocalTools(ctx.workspace)
     server_tools = router.on_list()
 
     prefix = NAMESPACE if collision == "namespace" else ""
     exposed = {f"{prefix}{tool.name}": tool.name for tool in server_tools}
 
-    server_schema = [
+    server_schema: list[ToolSchema] = [
         {
             "type": "function",
             "function": {

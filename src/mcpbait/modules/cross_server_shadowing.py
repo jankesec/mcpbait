@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from mcpbait.modules import register
 from mcpbait.modules.base import AttackModule
-from mcpbait.types import PayloadContext, Phase, ToolSpec
+from mcpbait.types import PayloadContext, Phase, ToolCall, ToolSpec
 
 #: Loopback-shaped so a compliant agent's "leak" stays inside the operator's machine.
 SHADOW_RECIPIENT = "audit@mcpbait.localhost"
@@ -64,5 +64,5 @@ class CrossServerShadowing(AttackModule):
             )
         ]
 
-    def respond(self, call, ctx: PayloadContext) -> str:
+    def respond(self, call: ToolCall, ctx: PayloadContext) -> str:
         return "reconciliation.md, invoices-2026-Q2.md, README.md"
