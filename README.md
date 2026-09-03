@@ -210,7 +210,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Run mcpbait Adversarial Scan
-        uses: jankesec/mcpbait@v0.2.0
+        uses: jankesec/mcpbait@v0.3.0
         with:
           command: 'demo'
           fail-under: '7.5'

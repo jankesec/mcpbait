@@ -1,6 +1,6 @@
 [project]
 name = "mcpbait"
-version = "0.2.0"
+version = "0.3.0"
 description = "Red teaming framework that proves whether an MCP agent can be hijacked"
 readme = "README.md"
 requires-python = ">=3.11"

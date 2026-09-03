@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-03
+
+### Fixed
+
+- `install` no longer destroys a client configuration it cannot parse. It caught the
+  JSON error, carried on from an empty dict, and rewrote the file as nothing but its own
+  entry; the `.bak` copy was rewritten on every run, so a second install buried the real
+  original. It now refuses, names the file, and exits cleanly. `uninstall` was already
+  correct.
+- `check_persistence` is part of the `AttackModule` contract instead of living on
+  `memory_poisoning` and being reached by name through the registry in four duplicated
+  blocks. A third-party persistence module can now take part in the kill chain.
+- `Session.ctx` is no longer optional. Three call sites dereferenced it without a check,
+  one of them passing the possible `None` to a signature that does not accept one.
+
+### Added
+
+- `mcpbait --version`.
+- Inline types are shipped to consumers (PEP 561 `py.typed`).
+- Changelog, code of conduct, issue and pull request templates, and pre-commit hooks.
+- Dependabot, CodeQL, OpenSSF Scorecard, a CycloneDX SBOM on each release, and explicit
+  PyPI attestations. Every workflow action reference is pinned to a commit SHA, and every
+  workflow and job declares least-privilege permissions.
+- The demo recording is generated from `docs/tape/demo.tape` rather than captured by hand.
+
+### Changed
+
+- `mypy --strict`, `ruff format` and a 92% coverage floor are blocking CI gates, across
+  Python 3.11, 3.12 and 3.13. Coverage went from 87% to 93%, and `clients.py` -- the only
+  code here that writes outside the decoy workspace -- from 67% to 100%.
+- Adopted a curated ruff ruleset in place of the line-length-only configuration.
+
 ## [0.2.0] - 2026-09-03
 
 ### Added
@@ -67,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server side: a model that silently declined is indistinguishable from one that never saw
   the payload, so the vocabulary stops at IGNORED rather than claiming a refusal.
 
-[Unreleased]: https://github.com/jankesec/mcpbait/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/jankesec/mcpbait/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/jankesec/mcpbait/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jankesec/mcpbait/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jankesec/mcpbait/releases/tag/v0.1.0
