@@ -62,7 +62,12 @@ class Session:
             self.record(
                 "canary_hit",
                 module_id,
-                {"canary": hit.name, "encoding": hit.encoding, "value": hit.value, "tool": call.name},
+                {
+                    "canary": hit.name,
+                    "encoding": hit.encoding,
+                    "value": hit.value,
+                    "tool": call.name,
+                },
             )
         return hits
 
@@ -76,7 +81,7 @@ class Session:
         for module in self.modules:
             try:
                 results[module.id] = module.verify(self.events)
-            except Exception as error:  # noqa: BLE001 - a bad module must never sink a run
+            except Exception as error:
                 self.record("module_error", module.id, {"stage": "verify", "error": repr(error)})
                 results[module.id] = Verdict.NOT_RUN
         return results
@@ -103,7 +108,9 @@ def load_session(path: Path, modules: Sequence[Any] = ()) -> Session:
     path = Path(path)
     session = Session(path.parent, modules, ctx=None, session_id=path.stem, readonly=True)
     session.events = [
-        Event.from_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
+        Event.from_json(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
     ]
     if session.events:
         session.started = session.events[0].ts

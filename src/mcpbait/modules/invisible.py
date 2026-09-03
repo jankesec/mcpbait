@@ -19,15 +19,11 @@ def to_tags(text: str) -> str:
 
 def from_tags(text: str) -> str:
     """Recover the ASCII hidden in tag characters, ignoring everything else."""
-    return "".join(
-        chr(ord(ch) - TAG_BASE) for ch in text if TAG_BASE <= ord(ch) <= TAG_BASE + 0x7F
-    )
+    return "".join(chr(ord(ch) - TAG_BASE) for ch in text if TAG_BASE <= ord(ch) <= TAG_BASE + 0x7F)
 
 
 def strip_invisible(text: str) -> str:
     """What a human actually sees: format characters and tag characters removed."""
     return "".join(
-        ch
-        for ch in text
-        if unicodedata.category(ch) != "Cf" and not TAG_BASE <= ord(ch) <= 0xE007F
+        ch for ch in text if unicodedata.category(ch) != "Cf" and not TAG_BASE <= ord(ch) <= 0xE007F
     )

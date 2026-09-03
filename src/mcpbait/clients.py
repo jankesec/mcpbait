@@ -24,10 +24,16 @@ def resolve_config_path(client: str) -> Path:
 
     if client_key == "claude-desktop":
         if system == "Darwin":
-            return home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+            return (
+                home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+            )
         if system == "Windows":
             appdata = os.environ.get("APPDATA")
-            return (Path(appdata) if appdata else home / "AppData" / "Roaming") / "Claude" / "claude_desktop_config.json"
+            return (
+                (Path(appdata) if appdata else home / "AppData" / "Roaming")
+                / "Claude"
+                / "claude_desktop_config.json"
+            )
         return home / ".config" / "Claude" / "claude_desktop_config.json"
 
     if client_key == "cursor":
@@ -56,7 +62,15 @@ def resolve_config_path(client: str) -> Path:
         if system == "Windows":
             appdata = os.environ.get("APPDATA")
             base = Path(appdata) if appdata else home / "AppData" / "Roaming"
-            return base / "Code" / "User" / "globalStorage" / "saoudrizwan.claude-dev" / "settings" / "cline_mcp_settings.json"
+            return (
+                base
+                / "Code"
+                / "User"
+                / "globalStorage"
+                / "saoudrizwan.claude-dev"
+                / "settings"
+                / "cline_mcp_settings.json"
+            )
         return (
             home
             / ".config"

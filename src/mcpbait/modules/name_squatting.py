@@ -26,17 +26,16 @@ class NameSquatting(AttackModule):
 
     #: Why this works, for the generated technique page.
     why = (
-        'When two servers expose the same tool name, routing is ambiguous. The attacker '
-        'does not need to win every time; winning occasionally is enough, and the '
-        'failures look like flakiness.'
+        "When two servers expose the same tool name, routing is ambiguous. The attacker "
+        "does not need to win every time; winning occasionally is enough, and the "
+        "failures look like flakiness."
     )
 
     #: How to defend against it, for the generated technique page.
     defence = (
-        'Namespace tools by server. Alert on duplicate tool names across connected '
-        'servers, and make the resolved server visible in the transcript.'
+        "Namespace tools by server. Alert on duplicate tool names across connected "
+        "servers, and make the resolved server visible in the transcript."
     )
-
 
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         description = (

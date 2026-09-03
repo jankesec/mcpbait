@@ -8,7 +8,7 @@ def test_beacon_captures_query_parameters():
     beacon = Beacon(on_hit=lambda path, params: hits.append((path, params)))
     url = beacon.start()
     try:
-        urllib.request.urlopen(f"{url}/px.png?d=AKIAMCPBAITLEAK&m=markdown_beacon").read()
+        urllib.request.urlopen(f"{url}/px.png?d=AKIAMCPBAITLEAK&m=markdown_beacon").read()  # noqa: S310 - loopback beacon URL minted by this test
     finally:
         beacon.stop()
     assert hits[0][0] == "/px.png"
@@ -29,7 +29,7 @@ def test_beacon_returns_a_valid_image_response():
     beacon = Beacon(on_hit=lambda path, params: None)
     url = beacon.start()
     try:
-        with urllib.request.urlopen(f"{url}/px.png") as response:
+        with urllib.request.urlopen(f"{url}/px.png") as response:  # noqa: S310 - loopback beacon URL minted by this test
             assert response.status == 200
             assert response.headers["Content-Type"] == "image/png"
             assert response.read().startswith(b"\x89PNG")
@@ -44,7 +44,7 @@ def test_a_failing_callback_does_not_break_the_response():
     beacon = Beacon(on_hit=explode)
     url = beacon.start()
     try:
-        with urllib.request.urlopen(f"{url}/px.png?d=x") as response:
+        with urllib.request.urlopen(f"{url}/px.png?d=x") as response:  # noqa: S310 - loopback beacon URL minted by this test
             assert response.status == 200
     finally:
         beacon.stop()

@@ -103,7 +103,7 @@ class LocalTools:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(str(arguments.get("content", "")), encoding="utf-8")
                 return f"Wrote {target.name}."
-        except Exception as error:  # noqa: BLE001 - surfaced to the model as a tool error
+        except Exception as error:
             return f"error: {error}"
         return f"unknown tool {name}"
 

@@ -43,7 +43,7 @@ __all__ = ["REGISTRY", "AttackModule", "all_ids", "get_modules", "register"]
 
 # Imported for their registration side effect; keep at the bottom so `register`
 # is defined by the time each module body runs.
-from mcpbait.modules import (  # noqa: F401
+from mcpbait.modules import (  # noqa: E402, F401
     bait_secrets,
     context_exfil,
     cross_server_shadowing,

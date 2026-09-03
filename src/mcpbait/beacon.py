@@ -44,7 +44,7 @@ class Beacon:
                 params = {k: v[0] for k, v in parse_qs(parts.query).items()}
                 try:
                     beacon.on_hit(parts.path, params)
-                except Exception as error:  # noqa: BLE001 - must not break the fetch
+                except Exception as error:
                     beacon.errors.append(repr(error))
                 self.send_response(200)
                 self.send_header("Content-Type", "image/png")

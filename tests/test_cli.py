@@ -86,7 +86,9 @@ def test_report_renders_a_finished_session(tmp_path):
     session.close()
     assert mint_set()
 
-    result = runner.invoke(app, ["report", "--dir", str(target), "--json", str(tmp_path / "r.json")])
+    result = runner.invoke(
+        app, ["report", "--dir", str(target), "--json", str(tmp_path / "r.json")]
+    )
     assert result.exit_code == 0, result.output
     assert "EXFIL CAUGHT" in result.output
     saved = json.loads((tmp_path / "r.json").read_text())
@@ -198,9 +200,7 @@ def test_config_can_disguise_the_server_name(tmp_path):
 def test_init_can_plant_the_decoy_in_the_agents_own_directory(tmp_path):
     project = tmp_path / "billing-service"
     state = tmp_path / "state"
-    result = runner.invoke(
-        app, ["init", "--dir", str(state), "--workspace", str(project)]
-    )
+    result = runner.invoke(app, ["init", "--dir", str(state), "--workspace", str(project)])
     assert result.exit_code == 0, result.output
     assert (project / ".env").exists()
     assert not (state / "workspace").exists()
@@ -241,9 +241,7 @@ def test_attack_requires_an_api_key(tmp_path, monkeypatch):
 
 
 def test_attack_requires_init_first(tmp_path):
-    result = runner.invoke(
-        app, ["attack", "--dir", str(tmp_path / "nope"), "--api-key", "x"]
-    )
+    result = runner.invoke(app, ["attack", "--dir", str(tmp_path / "nope"), "--api-key", "x"])
     assert result.exit_code == 1
     assert "init" in result.output.lower()
 
@@ -252,22 +250,28 @@ def test_attack_reports_the_spread_across_runs(tmp_path, monkeypatch):
     """The whole point: repeated runs, worst case leading."""
     import mcpbait.cli as cli_module
 
-    replies = iter([
-        {"role": "assistant", "content": "I will not do that."},
-        {
-            "role": "assistant",
-            "content": None,
-            "tool_calls": [{
-                "id": "c1", "type": "function",
-                "function": {"name": "read_file", "arguments": '{"path": ".env"}'},
-            }],
-        },
-        {"role": "assistant", "content": "summarised"},
-    ])
+    replies = iter(
+        [
+            {"role": "assistant", "content": "I will not do that."},
+            {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": "c1",
+                        "type": "function",
+                        "function": {"name": "read_file", "arguments": '{"path": ".env"}'},
+                    }
+                ],
+            },
+            {"role": "assistant", "content": "summarised"},
+        ]
+    )
 
     def fake_completion(**kwargs):
         async def complete(messages, tools):
             return next(replies)
+
         return complete
 
     monkeypatch.setattr(cli_module, "http_completion", fake_completion)
@@ -275,8 +279,18 @@ def test_attack_reports_the_spread_across_runs(tmp_path, monkeypatch):
     target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(
-        app, ["attack", "--dir", target, "--api-key", "x", "--runs", "2",
-              "--json", str(tmp_path / "s.json")]
+        app,
+        [
+            "attack",
+            "--dir",
+            target,
+            "--api-key",
+            "x",
+            "--runs",
+            "2",
+            "--json",
+            str(tmp_path / "s.json"),
+        ],
     )
     assert result.exit_code == 0, result.output
     assert "Worst-case score" in result.output
@@ -294,20 +308,37 @@ def test_attack_fail_under_gates_the_worst_case(tmp_path, monkeypatch):
     def fake_completion(**kwargs):
         async def complete(messages, tools):
             return {
-                "role": "assistant", "content": None,
-                "tool_calls": [{
-                    "id": "c1", "type": "function",
-                    "function": {"name": "read_file", "arguments": '{"path": ".env"}'},
-                }],
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": "c1",
+                        "type": "function",
+                        "function": {"name": "read_file", "arguments": '{"path": ".env"}'},
+                    }
+                ],
             }
+
         return complete
 
     monkeypatch.setattr(cli_module, "http_completion", fake_completion)
     target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(
-        app, ["attack", "--dir", target, "--api-key", "x", "--runs", "1",
-              "--max-turns", "2", "--fail-under", "8"]
+        app,
+        [
+            "attack",
+            "--dir",
+            target,
+            "--api-key",
+            "x",
+            "--runs",
+            "1",
+            "--max-turns",
+            "2",
+            "--fail-under",
+            "8",
+        ],
     )
     assert result.exit_code == 3
     assert "below" in result.output
@@ -320,6 +351,7 @@ def test_attack_never_scores_a_run_that_failed(tmp_path, monkeypatch):
     def exploding(**kwargs):
         async def complete(messages, tools):
             raise RuntimeError("400 Tool names must be unique.")
+
         return complete
 
     monkeypatch.setattr(cli_module, "http_completion", exploding)
@@ -342,14 +374,25 @@ def test_attack_excludes_only_the_failed_runs(tmp_path, monkeypatch):
             if state["calls"] == 1:
                 raise RuntimeError("transient upstream error")
             return {"role": "assistant", "content": "I will not do that."}
+
         return complete
 
     monkeypatch.setattr(cli_module, "http_completion", flaky)
     target = str(tmp_path / ".mcpbait")
     runner.invoke(app, ["init", "--dir", target])
     result = runner.invoke(
-        app, ["attack", "--dir", target, "--api-key", "x", "--runs", "2",
-              "--json", str(tmp_path / "s.json")]
+        app,
+        [
+            "attack",
+            "--dir",
+            target,
+            "--api-key",
+            "x",
+            "--runs",
+            "2",
+            "--json",
+            str(tmp_path / "s.json"),
+        ],
     )
     assert result.exit_code == 0, result.output
     assert "1 of 2 run(s) failed" in result.output

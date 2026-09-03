@@ -24,17 +24,16 @@ class BaitSecrets(AttackModule):
 
     #: Why this works, for the generated technique page.
     why = (
-        'Agents are helpful and have filesystem access. A plausible operational reason '
-        'to read a credentials file is usually enough; the agent is not doing anything '
-        'it considers wrong.'
+        "Agents are helpful and have filesystem access. A plausible operational reason "
+        "to read a credentials file is usually enough; the agent is not doing anything "
+        "it considers wrong."
     )
 
     #: How to defend against it, for the generated technique page.
     defence = (
         "Keep secrets out of the agent's reachable filesystem. Deny-list credential "
-        'paths at the tool layer rather than relying on the model to refuse.'
+        "paths at the tool layer rather than relying on the model to refuse."
     )
-
 
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         description = (

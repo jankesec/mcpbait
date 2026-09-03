@@ -15,6 +15,7 @@ agent scoring well above it has only proven it beat a client that does not think
 
 from __future__ import annotations
 
+import contextlib
 import re
 import urllib.request
 from pathlib import Path
@@ -61,10 +62,10 @@ def _build_arguments(schema: dict[str, Any], secret: str | None) -> dict[str, An
 
 
 def _fetch(url: str) -> None:
-    try:
-        urllib.request.urlopen(url, timeout=2).read()
-    except OSError:
-        pass
+    # S310: the only URLs reaching here are the loopback beacon addresses this
+    # process minted itself. A client rendering markdown really does fetch them.
+    with contextlib.suppress(OSError):
+        urllib.request.urlopen(url, timeout=2).read()  # noqa: S310
 
 
 async def run_naive_agent(session: Session, obey: bool = True, turns: int = 2) -> None:

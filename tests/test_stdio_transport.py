@@ -76,9 +76,7 @@ async def test_undeclared_parameters_still_reach_the_scanner(served_dir):
     )
     async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
         await session.initialize()
-        await session.call_tool(
-            "render_report", {"undeclared_field": canaries["api_token"]}
-        )
+        await session.call_tool("render_report", {"undeclared_field": canaries["api_token"]})
 
     logs = list((directory / "sessions").glob("*.jsonl"))
     events = [json.loads(line) for line in logs[0].read_text().splitlines()]

@@ -161,9 +161,9 @@ def install(
             state_dir=directory,
             custom_path=config_path,
         )
-    except ValueError as e:
-        typer.echo(str(e), err=True)
-        raise typer.Exit(code=1)
+    except ValueError as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(code=1) from error
 
     console = Console()
     console.print(f"[green]Successfully configured disguised server '{name}' for {client}:[/green]")
@@ -205,9 +205,9 @@ def uninstall(
             server_name=name,
             custom_path=config_path,
         )
-    except ValueError as e:
-        typer.echo(str(e), err=True)
-        raise typer.Exit(code=1)
+    except ValueError as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(code=1) from error
 
     Console().print(f"[green]Removed server '{name}' from {client} configuration:[/green] {target}")
 
@@ -232,16 +232,22 @@ def badge(
         final_score = score
     else:
         sessions_dir = directory / "sessions"
-        path = (sessions_dir / f"{session_id}.jsonl") if session_id else latest_session(sessions_dir)
+        path = (
+            (sessions_dir / f"{session_id}.jsonl") if session_id else latest_session(sessions_dir)
+        )
         if path is None or not path.is_file():
-            typer.echo(f"No session found in {sessions_dir}. Pass --score or run a test first.", err=True)
+            typer.echo(
+                f"No session found in {sessions_dir}. Pass --score or run a test first.", err=True
+            )
             raise typer.Exit(code=1)
         session = load_session(path, modules=get_modules(None))
         final_score = session.score()
 
     svg_content = generate_badge(final_score)
     output.write_text(svg_content, encoding="utf-8")
-    Console().print(f"[green]Resilience badge ({final_score:.1f}/10) generated at:[/green] {output}")
+    Console().print(
+        f"[green]Resilience badge ({final_score:.1f}/10) generated at:[/green] {output}"
+    )
 
 
 @app.command()
@@ -350,13 +356,16 @@ def attack(
     directory: DirOption = DEFAULT_DIR,
     model: Annotated[str, typer.Option("--model", help="Model id to test.")] = "gpt-4o-mini",
     api_base: Annotated[
-        str, typer.Option("--api-base", envvar="MCPBAIT_API_BASE", help="OpenAI-compatible base URL.")
+        str,
+        typer.Option("--api-base", envvar="MCPBAIT_API_BASE", help="OpenAI-compatible base URL."),
     ] = "https://api.openai.com/v1",
     api_key: Annotated[
         str | None, typer.Option("--api-key", envvar="MCPBAIT_API_KEY", help="API key.")
     ] = None,
     runs: Annotated[int, typer.Option("--runs", help="How many sessions to run.")] = 3,
-    task: Annotated[str, typer.Option("--task", help="The ordinary task to give the agent.")] = DEFAULT_TASK,
+    task: Annotated[
+        str, typer.Option("--task", help="The ordinary task to give the agent.")
+    ] = DEFAULT_TASK,
     max_turns: Annotated[int, typer.Option("--max-turns", help="Tool-calling turns per run.")] = 8,
     collision: Annotated[
         str,
@@ -368,7 +377,9 @@ def attack(
     module_ids: Annotated[
         str | None, typer.Option("--modules", help="Comma-separated module ids. Default: all.")
     ] = None,
-    json_path: Annotated[Path | None, typer.Option("--json", help="Write the summary here.")] = None,
+    json_path: Annotated[
+        Path | None, typer.Option("--json", help="Write the summary here.")
+    ] = None,
     fail_under: Annotated[
         float | None,
         typer.Option("--fail-under", help="Exit 3 if the worst-case score is below this."),
@@ -414,7 +425,7 @@ def attack(
                     _s, completion, task=task, max_turns=max_turns, collision=collision
                 )
             )
-        except Exception as error:  # noqa: BLE001 - one bad run must not lose the others
+        except Exception as error:
             failed = str(error)
             reply = ""
             session.record("run_error", "", {"error": repr(error)})
@@ -532,13 +543,16 @@ def matrix(
         typer.Option("--models", help="Comma-separated list of model IDs to benchmark."),
     ] = "gpt-4o,gpt-4o-mini",
     api_base: Annotated[
-        str, typer.Option("--api-base", envvar="MCPBAIT_API_BASE", help="OpenAI-compatible base URL.")
+        str,
+        typer.Option("--api-base", envvar="MCPBAIT_API_BASE", help="OpenAI-compatible base URL."),
     ] = "https://api.openai.com/v1",
     api_key: Annotated[
         str | None, typer.Option("--api-key", envvar="MCPBAIT_API_KEY", help="API key.")
     ] = None,
     runs: Annotated[int, typer.Option("--runs", help="How many sessions to run per model.")] = 2,
-    task: Annotated[str, typer.Option("--task", help="The ordinary task to give the agent.")] = DEFAULT_TASK,
+    task: Annotated[
+        str, typer.Option("--task", help="The ordinary task to give the agent.")
+    ] = DEFAULT_TASK,
     max_turns: Annotated[int, typer.Option("--max-turns", help="Tool-calling turns per run.")] = 8,
     collision: Annotated[
         str,
@@ -605,7 +619,7 @@ def matrix(
                         _s, _c, task=task, max_turns=max_turns, collision=collision
                     )
                 )
-            except Exception as error:  # noqa: BLE001
+            except Exception as error:
                 failed = str(error)
                 reply = ""
                 session.record("run_error", "", {"error": repr(error)})
@@ -614,7 +628,9 @@ def matrix(
 
             persistence = REGISTRY["memory_poisoning"]()
             if persistence.check_persistence(workspace):
-                session.record("persistence_confirmed", persistence.id, {"workspace": str(workspace)})
+                session.record(
+                    "persistence_confirmed", persistence.id, {"workspace": str(workspace)}
+                )
             session.close()
 
             if failed:
@@ -656,12 +672,14 @@ def matrix(
 
     if fail_under is not None:
         failing_models = [
-            m for m, data in matrix_results["models"].items()
+            m
+            for m, data in matrix_results["models"].items()
             if data["worst_case_score"] < fail_under
         ]
         if failing_models:
             console.print(
-                f"\n[red]Failure: {len(failing_models)} model(s) fell below threshold {fail_under}: "
+                f"\n[red]Failure: {len(failing_models)} model(s) fell below "
+                f"threshold {fail_under}: "
                 f"{', '.join(failing_models)}[/red]"
             )
             raise typer.Exit(code=3)

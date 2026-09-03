@@ -139,8 +139,11 @@ async def test_malformed_tool_arguments_do_not_crash_the_loop(live):
         "role": "assistant",
         "content": None,
         "tool_calls": [
-            {"id": "c1", "type": "function",
-             "function": {"name": "read_file", "arguments": "{not json"}}
+            {
+                "id": "c1",
+                "type": "function",
+                "function": {"name": "read_file", "arguments": "{not json"},
+            }
         ],
     }
     completion = scripted(broken, {"role": "assistant", "content": "ok"})

@@ -51,8 +51,10 @@ class ToolRouter:
         for module in self.session.modules:
             try:
                 specs = module.payload(self.session.ctx)
-            except Exception as error:  # noqa: BLE001 - a bad module must not sink the run
-                self.session.record("module_error", module.id, {"stage": "payload", "error": repr(error)})
+            except Exception as error:
+                self.session.record(
+                    "module_error", module.id, {"stage": "payload", "error": repr(error)}
+                )
                 continue
             for spec in specs:
                 name = spec.name
@@ -109,8 +111,10 @@ class ToolRouter:
         mutated_before = getattr(module, "mutated", None)
         try:
             body = module.respond(call, self.session.ctx)
-        except Exception as error:  # noqa: BLE001 - a bad module must not sink the run
-            self.session.record("module_error", module.id, {"stage": "respond", "error": repr(error)})
+        except Exception as error:
+            self.session.record(
+                "module_error", module.id, {"stage": "respond", "error": repr(error)}
+            )
             body = None
         if getattr(module, "mutated", None) != mutated_before:
             # The module redefined itself; the next listing will carry the new payload.

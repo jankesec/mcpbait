@@ -92,7 +92,9 @@ def to_dict(session: Session) -> dict[str, Any]:
     ]
     return {
         "session_id": session.id,
-        "started": datetime.fromtimestamp(session.started, tz=UTC).astimezone().isoformat(timespec="seconds"),
+        "started": datetime.fromtimestamp(session.started, tz=UTC)
+        .astimezone()
+        .isoformat(timespec="seconds"),
         "score": session.score(),
         "verdicts": {module_id: str(verdict) for module_id, verdict in verdicts.items()},
         "evidence": evidence,
@@ -152,9 +154,7 @@ def render_summary(session: Session) -> Table:
         verdicts = {
             module_id: (
                 Verdict.COMPROMISED
-                if any(
-                    e.module_id == module_id and e.kind in PROOF_KINDS for e in session.events
-                )
+                if any(e.module_id == module_id and e.kind in PROOF_KINDS for e in session.events)
                 else Verdict.IGNORED
             )
             for module_id in sorted(seen)
@@ -190,11 +190,21 @@ def to_html(session: Session) -> str:
         score_grade = "High Vulnerability (F)"
 
     verdict_badge_styles = {
-        str(Verdict.COMPROMISED): "background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);",
-        str(Verdict.BAITED): "background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);",
-        str(Verdict.IGNORED): "background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4);",
-        str(Verdict.BLOCKED): "background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);",
-        str(Verdict.NOT_RUN): "background: rgba(107, 114, 128, 0.2); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.4);",
+        str(
+            Verdict.COMPROMISED
+        ): "background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);",
+        str(
+            Verdict.BAITED
+        ): "background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);",
+        str(
+            Verdict.IGNORED
+        ): "background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4);",
+        str(
+            Verdict.BLOCKED
+        ): "background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);",
+        str(
+            Verdict.NOT_RUN
+        ): "background: rgba(107, 114, 128, 0.2); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.4);",
     }
 
     verdict_rows = []
@@ -384,13 +394,13 @@ def to_html(session: Session) -> str:
 
     <div class="card">
       <div class="card-label">Data Exfiltration Hits</div>
-      <div class="card-value" style="color: {'#f87171' if exfil_caught > 0 else '#34d399'};">{exfil_caught}</div>
+      <div class="card-value" style="color: {"#f87171" if exfil_caught > 0 else "#34d399"};">{exfil_caught}</div>
       <div style="font-size: 0.8rem; color: var(--text-secondary);">Synthetic secrets leaked</div>
     </div>
 
     <div class="card">
       <div class="card-label">Persistence & Poisoning</div>
-      <div class="card-value" style="color: {'#f87171' if persisted_count > 0 else '#34d399'};">{persisted_count}</div>
+      <div class="card-value" style="color: {"#f87171" if persisted_count > 0 else "#34d399"};">{persisted_count}</div>
       <div style="font-size: 0.8rem; color: var(--text-secondary);">Instructions planted</div>
     </div>
   </div>

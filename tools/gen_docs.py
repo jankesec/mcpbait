@@ -110,7 +110,9 @@ survives the end of the conversation.
 def main() -> None:
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
     for module_id in all_ids():
-        (DOCS_DIR / f"{module_id}.md").write_text(render_page(REGISTRY[module_id]), encoding="utf-8")
+        (DOCS_DIR / f"{module_id}.md").write_text(
+            render_page(REGISTRY[module_id]), encoding="utf-8"
+        )
     (DOCS_DIR / "README.md").write_text(render_index(), encoding="utf-8")
     print(f"wrote {len(all_ids()) + 1} pages to {DOCS_DIR}")
 

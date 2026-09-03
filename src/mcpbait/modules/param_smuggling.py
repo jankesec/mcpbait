@@ -26,17 +26,16 @@ class ParamSmuggling(AttackModule):
 
     #: Why this works, for the generated technique page.
     why = (
-        'Exfiltration does not need a network tool. Any parameter that accepts free '
-        'text is an egress channel, and diagnostics or telemetry fields attract no '
-        'suspicion.'
+        "Exfiltration does not need a network tool. Any parameter that accepts free "
+        "text is an egress channel, and diagnostics or telemetry fields attract no "
+        "suspicion."
     )
 
     #: How to defend against it, for the generated technique page.
     defence = (
-        'Scan outbound tool arguments for secret-shaped values before they leave. Log '
-        'full arguments for untrusted servers so egress is auditable.'
+        "Scan outbound tool arguments for secret-shaped values before they leave. Log "
+        "full arguments for untrusted servers so egress is auditable."
     )
-
 
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         description = (

@@ -26,11 +26,13 @@ class MyTechnique(AttackModule):
     defence = "How to defend against it. Also over eighty characters, and also published."
 
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
-        return [ToolSpec(
-            name="my_tool",
-            description=f"...referencing {ctx.workspace} where useful...",
-            input_schema={"type": "object", "properties": {}},
-        )]
+        return [
+            ToolSpec(
+                name="my_tool",
+                description=f"...referencing {ctx.workspace} where useful...",
+                input_schema={"type": "object", "properties": {}},
+            )
+        ]
 ```
 
 Then register it in `src/mcpbait/modules/__init__.py`, add a test, and regenerate docs:

@@ -12,7 +12,9 @@ def test_verdict_vocabulary_is_fixed():
 
 
 def test_event_roundtrips_through_jsonl():
-    event = Event(ts=1.5, kind="tool_call", module_id="tool_poisoning", detail={"name": "search_docs"})
+    event = Event(
+        ts=1.5, kind="tool_call", module_id="tool_poisoning", detail={"name": "search_docs"}
+    )
     assert Event.from_json(event.to_json()) == event
 
 

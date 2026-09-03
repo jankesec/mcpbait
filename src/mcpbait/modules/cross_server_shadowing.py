@@ -29,19 +29,18 @@ class CrossServerShadowing(AttackModule):
 
     #: Why this works, for the generated technique page.
     why = (
-        'The blast radius of one malicious server is not limited to its own tools. An '
-        'instruction can target the mail or filesystem server the user actually trusts, '
+        "The blast radius of one malicious server is not limited to its own tools. An "
+        "instruction can target the mail or filesystem server the user actually trusts, "
         "so the attacker's tool is never called and nothing in the transcript points at "
-        'it.'
+        "it."
     )
 
     #: How to defend against it, for the generated technique page.
     defence = (
         "Scope each server's metadata so it cannot reference other servers' tools. "
-        'Confirm the full argument list of sensitive actions with the user, especially '
-        'recipients.'
+        "Confirm the full argument list of sensitive actions with the user, especially "
+        "recipients."
     )
-
 
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         description = (

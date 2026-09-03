@@ -39,7 +39,9 @@ def render_matrix_table(matrix: dict[str, Any]) -> Table:
 
         # Count total module verdicts across worst outcomes
         comp_count = sum(
-            1 for m in data.get("modules", {}).values() if m.get("worst") == str(Verdict.COMPROMISED)
+            1
+            for m in data.get("modules", {}).values()
+            if m.get("worst") == str(Verdict.COMPROMISED)
         )
         baited_count = sum(
             1 for m in data.get("modules", {}).values() if m.get("worst") == str(Verdict.BAITED)
@@ -97,7 +99,9 @@ def render_matrix_markdown(matrix: dict[str, Any]) -> str:
         worst = data.get("worst_case_score", 0.0)
         mean = data.get("mean_score", 0.0)
         comp_count = sum(
-            1 for m in data.get("modules", {}).values() if m.get("worst") == str(Verdict.COMPROMISED)
+            1
+            for m in data.get("modules", {}).values()
+            if m.get("worst") == str(Verdict.COMPROMISED)
         )
 
         if worst >= 9.0:
@@ -112,15 +116,18 @@ def render_matrix_markdown(matrix: dict[str, Any]) -> str:
             grade = "🚨 F (Critical)"
 
         lines.append(
-            f"| #{rank} | `{model_name}` | **{worst:.1f} / 10** | {mean:.1f} | {comp_count} | {grade} |"
+            f"| #{rank} | `{model_name}` | **{worst:.1f} / 10** "
+            f"| {mean:.1f} | {comp_count} | {grade} |"
         )
 
     # Add detailed module breakdown table
-    lines.extend([
-        "",
-        "## Detailed Technique Breakdown",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Detailed Technique Breakdown",
+            "",
+        ]
+    )
 
     module_ids = sorted(REGISTRY.keys())
     header_cols = ["Technique", "ATLAS ID"] + [f"`{m}`" for m, _ in sorted_models]
@@ -132,13 +139,14 @@ def render_matrix_markdown(matrix: dict[str, Any]) -> str:
         str(Verdict.BAITED): "⚠️ Baited",
         str(Verdict.IGNORED): "🛡️ Ignored",
         str(Verdict.BLOCKED): "✅ Blocked",
-        str(Verdict.NOT_RUN): "➖ Not Run",
+        # The heavy minus reads as a dash at table width; a hyphen disappears.
+        str(Verdict.NOT_RUN): "➖ Not Run",  # noqa: RUF001
     }
 
     for mod_id in module_ids:
         cls = REGISTRY[mod_id]
         row = [mod_id, cls.atlas_id]
-        for model_name, data in sorted_models:
+        for _model_name, data in sorted_models:
             mod_data = data.get("modules", {}).get(mod_id, {})
             worst = mod_data.get("worst", str(Verdict.NOT_RUN))
             row.append(verdict_emoji.get(worst, worst))

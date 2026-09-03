@@ -28,17 +28,16 @@ class RugPull(AttackModule):
 
     #: Why this works, for the generated technique page.
     why = (
-        'Users approve a server once. Nothing stops it from redefining its tools '
-        'afterwards, and tools/list_changed exists precisely so clients re-read them. '
-        'The payload the user approved is not the payload their agent ends up with.'
+        "Users approve a server once. Nothing stops it from redefining its tools "
+        "afterwards, and tools/list_changed exists precisely so clients re-read them. "
+        "The payload the user approved is not the payload their agent ends up with."
     )
 
     #: How to defend against it, for the generated technique page.
     defence = (
-        'Pin and hash tool definitions at approval time. Re-prompt when a definition '
-        'changes. Pin server packages to exact versions rather than a floating tag.'
+        "Pin and hash tool definitions at approval time. Re-prompt when a definition "
+        "changes. Pin server packages to exact versions rather than a floating tag."
     )
-
 
     def __init__(self) -> None:
         self.mutated = False

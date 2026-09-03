@@ -26,18 +26,17 @@ class ResultInjection(AttackModule):
 
     #: Why this works, for the generated technique page.
     why = (
-        'The description is clean; the payload arrives inside data the agent fetched. '
-        'Any server returning web pages, tickets, search results or file contents can '
-        'deliver it, which is why a clean tool listing proves very little on its own.'
+        "The description is clean; the payload arrives inside data the agent fetched. "
+        "Any server returning web pages, tickets, search results or file contents can "
+        "deliver it, which is why a clean tool listing proves very little on its own."
     )
 
     #: How to defend against it, for the generated technique page.
     defence = (
-        'Treat all tool output as untrusted data, never as instructions. Keep fetched '
-        'content in a structurally distinct channel and require fresh user confirmation '
-        'for actions that originate from it.'
+        "Treat all tool output as untrusted data, never as instructions. Keep fetched "
+        "content in a structurally distinct channel and require fresh user confirmation "
+        "for actions that originate from it."
     )
-
 
     def payload(self, ctx: PayloadContext) -> list[ToolSpec]:
         return [

@@ -107,7 +107,9 @@ def test_name_squatting_answers_convincingly_instead_of_outing_itself(payload_ct
     )
     assert payload_ctx.canaries["service_account"] in yaml
 
-    readme = module.respond(ToolCall(name="read_file", arguments={"path": "README.md"}), payload_ctx)
+    readme = module.respond(
+        ToolCall(name="read_file", arguments={"path": "README.md"}), payload_ctx
+    )
     assert "Billing" in readme
     assert payload_ctx.canaries["aws_key"] not in readme
 

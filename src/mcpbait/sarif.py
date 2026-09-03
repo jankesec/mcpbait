@@ -12,7 +12,7 @@ from typing import Any
 from mcpbait import __version__
 from mcpbait.engine import Session
 from mcpbait.modules import REGISTRY
-from mcpbait.types import Verdict
+from mcpbait.types import Event, Verdict
 
 
 def to_sarif(session: Session) -> dict[str, Any]:
@@ -73,15 +73,22 @@ def to_sarif(session: Session) -> dict[str, Any]:
 
         # Collect proof events for this module
         proof_events = [
-            e for e in session.events if e.module_id == module_id and e.kind in (
-                "canary_hit", "beacon_hit", "persistence_confirmed", "tool_call"
-            )
+            e
+            for e in session.events
+            if e.module_id == module_id
+            and e.kind in ("canary_hit", "beacon_hit", "persistence_confirmed", "tool_call")
         ]
 
-        evidence_str = "; ".join(
-            f"{e.kind}: {e.detail.get('canary') or e.detail.get('tool') or e.detail.get('name') or 'detected'}"
-            for e in proof_events
-        ) or f"Observed status: {verdict}"
+        def _what(event: Event) -> str:
+            detail = event.detail
+            return str(
+                detail.get("canary") or detail.get("tool") or detail.get("name") or "detected"
+            )
+
+        evidence_str = (
+            "; ".join(f"{e.kind}: {_what(e)}" for e in proof_events)
+            or f"Observed status: {verdict}"
+        )
 
         message_text = (
             f"Agent failed resilience check on technique '{module_id}' (Verdict: {verdict}). "
