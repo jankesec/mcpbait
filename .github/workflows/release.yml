@@ -24,9 +24,23 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
         with:
           python-version: "3.12"
-      - run: uv sync --all-extras --dev
+      # --frozen so the release is built from the committed lockfile rather than
+      # whatever resolves on the day.
+      - run: uv sync --all-extras --dev --frozen
+      # The same gates as ci.yml. A tag that would fail CI must not reach PyPI
+      # merely because the release workflow asked fewer questions.
       - run: uv run ruff check .
-      - run: uv run pytest -q
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest -q --cov
+      - run: uv build
+      # Publish the artefact that was actually tested. Rebuilding in the publish job
+      # would ship a wheel no job in this run ever exercised.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
 
   publish:
     # A tag that fails its own test suite must never reach PyPI: releases cannot
@@ -45,7 +59,10 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
         with:
           python-version: "3.12"
-      - run: uv build
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+        with:
+          name: dist
+          path: dist/
       - name: Generate SBOM
         # `cyclonedx-py environment` with no path describes the environment it is
         # itself running in -- under uvx, that is cyclonedx's own ephemeral venv, not
