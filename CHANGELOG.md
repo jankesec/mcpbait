@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Python 3.11, 3.12 and 3.13. Coverage went from 87% to 93%, and `clients.py` -- the only
   code here that writes outside the decoy workspace -- from 67% to 100%.
 - Adopted a curated ruff ruleset in place of the line-length-only configuration.
+- The release workflow now runs the same gates as CI and publishes the artefact the test
+  job built, rather than rebuilding one no job had exercised. `uv sync --frozen` builds a
+  release from the committed lockfile.
 
 ## [0.2.0] - 2026-09-03
 
