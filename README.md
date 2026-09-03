@@ -1,6 +1,7 @@
 # mcpbait
 
 [![ci](https://github.com/jankesec/mcpbait/actions/workflows/ci.yml/badge.svg)](https://github.com/jankesec/mcpbait/actions/workflows/ci.yml)
+[![pypi](https://img.shields.io/pypi/v/mcpbait?color=blue&logo=pypi)](https://pypi.org/project/mcpbait/)
 [![python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![licence](https://img.shields.io/badge/licence-Apache--2.0-green)](LICENSE)
 
