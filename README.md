@@ -18,7 +18,7 @@
   <a href="#-quick-demo-5-seconds"><b>[ Quick Demo ]</b></a> &nbsp;•&nbsp;
   <a href="#-offensive-arsenal--mitre-atlas-matrix"><b>[ Attack Matrix ]</b></a> &nbsp;•&nbsp;
   <a href="#-1-click-client-hijack-auditing"><b>[ 1-Click Client Audit ]</b></a> &nbsp;•&nbsp;
-  <a href="#-multi-model-benchmarks--matrix"><b>[ Multi-Model Matrix ]</b></a> &nbsp;•&nbsp;
+  <a href="docs/LEADERBOARD.md"><b>[ 🏆 2026 Model Leaderboard ]</b></a> &nbsp;•&nbsp;
   <a href="#-devsecops-sarif--ci-pipeline"><b>[ DevSecOps & SARIF ]</b></a> &nbsp;•&nbsp;
   <a href="docs/LAUNCH_KIT.md"><b>[ Launch Kit ]</b></a>
 </p>

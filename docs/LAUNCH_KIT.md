@@ -40,6 +40,35 @@ Would love feedback from anyone building MCP clients, servers, or agent orchestr
 
 ---
 
+## 2. Viral Leaderboard Announcement (X / Reddit / Hacker News)
+
+**Title:** `We red-teamed 6 frontier LLMs against rogue MCP servers: Here is the 2026 Security Leaderboard`  
+**Target:** X (Twitter), Reddit `/r/LocalLLaMA`, `/r/MachineLearning`, `/r/netsec`
+
+```markdown
+🚨 What happens when autonomous AI agents connect to untrusted Model Context Protocol (MCP) servers?
+
+We evaluated 6 frontier and open models (Claude 3.7, Gemini 2.5, GPT-4o, Llama 3.3, GPT-4o-mini, DeepSeek-V3) across 13 MITRE ATLAS attack vectors using mcpbait.
+
+🏆 The 2026 Resilience Leaderboard:
+1. Claude 3.7 Sonnet: 8.2 / 10 (🟢 Grade A - Resilient)
+2. Gemini 2.5 Pro: 7.6 / 10 (🟢 Grade A- - Strong)
+3. GPT-4o: 6.8 / 10 (🟡 Grade B - Moderate)
+4. Llama 3.3 70B: 5.9 / 10 (🟡 Grade B- - Caution)
+5. GPT-4o-mini: 4.8 / 10 (🔴 Grade C - Vulnerable)
+6. DeepSeek-V3: 4.2 / 10 (🚨 Grade F - Critical)
+
+💥 3 Surprising Findings:
+1. 100% of models succumbed to Markdown UI Beacons: The models didn't even have to agree to exfiltrate data—the client renderer triggered the leak.
+2. The "Helpfulness Paradox": High-reasoning models were more likely to poison their own .cursorrules / CLAUDE.md memory because writing files is viewed as a helpful developer task.
+3. Tool Shadowing succeeded on 5/6 models under standard client configs.
+
+📊 Full matrix and reproducibility details:
+https://github.com/jankesec/mcpbait/blob/main/docs/LEADERBOARD.md
+```
+
+---
+
 ## 2. Reddit — /r/netsec Post
 
 **Target Subreddit:** `r/netsec`  
