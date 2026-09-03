@@ -11,6 +11,8 @@ import json
 import shutil
 import sys
 import tempfile
+from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -64,12 +66,30 @@ def main(
     """Prove whether an MCP-speaking agent can be hijacked by a malicious server."""
 
 
-def _load_state(directory: Path) -> dict:
+def _beacon_recorder(session: Session) -> Callable[[str, dict[str, str]], None]:
+    """Turn a beacon fetch into an evidence row.
+
+    Beacon.on_hit returns nothing; Session.record returns the Event it wrote. A lambda
+    would hand that Event back and no longer match the callback's type, so the discard
+    is made explicit here instead.
+    """
+
+    def record(path: str, params: dict[str, str]) -> None:
+        session.record("beacon_hit", params.get("m", ""), {"path": path, "params": params})
+
+    return record
+
+
+def _load_state(directory: Path) -> dict[str, Any]:
     state_file = directory / "state.json"
     if not state_file.is_file():
         typer.echo(f"No state in {directory}. Run 'mcpbait init' first.", err=True)
         raise typer.Exit(code=1)
-    return json.loads(state_file.read_text(encoding="utf-8"))
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    if not isinstance(state, dict):
+        typer.echo(f"{state_file} is not a JSON object. Run 'mcpbait init' again.", err=True)
+        raise typer.Exit(code=1)
+    return state
 
 
 def _select(module_ids: str | None) -> list[str] | None:
@@ -312,9 +332,7 @@ def serve(
     session = Session(sessions_dir, modules=get_modules(selected), ctx=ctx)
 
     # Rebound now that the session exists, so render-triggered fetches become evidence.
-    beacon.on_hit = lambda path, params: session.record(
-        "beacon_hit", params.get("m", ""), {"path": path, "params": params}
-    )
+    beacon.on_hit = _beacon_recorder(session)
 
     print(f"mcpbait {__version__} serving {len(session.modules)} modules", file=sys.stderr)
     print(f"session {session.id} -> {session.path}", file=sys.stderr)
@@ -352,9 +370,7 @@ def demo(
         beacon = Beacon(on_hit=lambda path, params: None)
         ctx = PayloadContext(canaries=canaries, workspace=workspace, beacon_url=beacon.start())
         session = Session(root / "sessions", modules=get_modules(selected), ctx=ctx)
-        beacon.on_hit = lambda path, params: session.record(
-            "beacon_hit", params.get("m", ""), {"path": path, "params": params}
-        )
+        beacon.on_hit = _beacon_recorder(session)
         try:
             anyio.run(run_naive_agent, session)
         finally:
@@ -435,14 +451,17 @@ def attack(
             canaries=state["canaries"], workspace=workspace, beacon_url=beacon.start()
         )
         session = Session(directory / "sessions", modules=get_modules(selected), ctx=ctx)
-        beacon.on_hit = lambda path, params, _s=session: _s.record(
-            "beacon_hit", params.get("m", ""), {"path": path, "params": params}
-        )
+        beacon.on_hit = _beacon_recorder(session)
         failed = None
         try:
             reply = anyio.run(
-                lambda _s=session: run_agent(
-                    _s, completion, task=task, max_turns=max_turns, collision=collision
+                partial(
+                    run_agent,
+                    session,
+                    completion,
+                    task=task,
+                    max_turns=max_turns,
+                    collision=collision,
                 )
             )
         except Exception as error:
@@ -624,15 +643,18 @@ def matrix(
                 canaries=state["canaries"], workspace=workspace, beacon_url=beacon.start()
             )
             session = Session(directory / "sessions", modules=get_modules(selected), ctx=ctx)
-            beacon.on_hit = lambda path, params, _s=session: _s.record(
-                "beacon_hit", params.get("m", ""), {"path": path, "params": params}
-            )
+            beacon.on_hit = _beacon_recorder(session)
 
             failed = None
             try:
                 reply = anyio.run(
-                    lambda _s=session, _c=completion: run_agent(
-                        _s, _c, task=task, max_turns=max_turns, collision=collision
+                    partial(
+                        run_agent,
+                        session,
+                        completion,
+                        task=task,
+                        max_turns=max_turns,
+                        collision=collision,
                     )
                 )
             except Exception as error:

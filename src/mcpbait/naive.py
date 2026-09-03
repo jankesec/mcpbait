@@ -22,10 +22,11 @@ from pathlib import Path
 from typing import Any
 
 import anyio
+from mcp import types
 
 from mcpbait.engine import Session
 from mcpbait.modules.invisible import from_tags
-from mcpbait.server import build_server
+from mcpbait.server import ToolRouter, build_server
 
 IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\((?P<url>[^)]+)\)")
 PERSISTENCE_PATTERN = re.compile(r"<!--\s*mcpbait-persistence-[0-9a-f]+\s*-->")
@@ -86,7 +87,9 @@ async def run_naive_agent(session: Session, obey: bool = True, turns: int = 2) -
         carried = await _take_a_turn(router, tools, workspace, carried)
 
 
-async def _take_a_turn(router, tools, workspace: Path, carried: str | None) -> str | None:
+async def _take_a_turn(
+    router: ToolRouter, tools: list[types.Tool], workspace: Path, carried: str | None
+) -> str | None:
     for tool in tools:
         instruction = _readable_instruction(tool.description or "")
         secret = _referenced_file(instruction, workspace) or carried
