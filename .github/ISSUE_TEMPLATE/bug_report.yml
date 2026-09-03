@@ -1,0 +1,87 @@
+name: Bug report
+description: mcpbait did something other than what it says it does.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Do not report a vulnerability in mcpbait here — use a
+        [private advisory](https://github.com/jankesec/mcpbait/security/advisories/new).
+        A vendor agent that failed the test is not an mcpbait bug either; see
+        [SECURITY.md](https://github.com/jankesec/mcpbait/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: >
+        Paste the command you ran and the output. If a verdict looks wrong, include the
+        session JSON from `mcpbait report --json` rather than the raw log — the raw log
+        contains your full canary values.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What you expected instead, and what led you to expect it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: >
+        Numbered steps from a clean directory. If it reproduces with `mcpbait demo`, say
+        so — that path needs no API key, no network and no model, which makes it the
+        fastest thing for a maintainer to run.
+      placeholder: |
+        1. mcpbait init
+        2. mcpbait demo --modules rug_pull
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: mcpbait version
+      description: >
+        Output of `python -c "import mcpbait; print(mcpbait.__version__)"`. If you
+        installed from a checkout rather than PyPI, give the commit instead.
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python --version`.
+      placeholder: "3.12.4"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 15.1 / Ubuntu 24.04 / Windows 11"
+    validations:
+      required: true
+
+  - type: input
+    id: agent-under-test
+    attributes:
+      label: Agent or client under test
+      description: >
+        Which side of the connection was being tested — Claude Desktop, Cursor, Windsurf,
+        Cline, a model behind `mcpbait attack`, the built-in reference agent, or something
+        custom. Include the model id where one applies. Host clients differ in how they
+        resolve duplicate tool names and render tool descriptions, and that alone changes
+        which techniques land.
+      placeholder: "Cursor 0.44 / gpt-4o-mini via mcpbait attack / mcpbait demo"
+    validations:
+      required: true

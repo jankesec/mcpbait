@@ -59,6 +59,16 @@ No API key, no network, no model. The end-to-end tests drive a fake client that 
 every instruction it reads. If you need a real agent in the loop, that is a manual run,
 not a CI job.
 
+## Hooks
+
+```bash
+uvx pre-commit install
+```
+
+This runs `ruff check --fix`, `ruff format` and a few file hygiene checks on every commit.
+It is the same lint and format CI enforces, so a failure reaches you while the change is
+still in your head rather than twenty minutes later on a red build.
+
 ## Out of scope
 
 See [SECURITY.md](SECURITY.md). Evasion and third-party targeting are declined.

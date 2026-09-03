@@ -1,0 +1,144 @@
+name: New attack module
+description: Propose a new attack technique for the module directory.
+labels: ["module"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        This is the most valuable contribution to the project. The module directory is what
+        keeps a framework like this alive.
+
+
+        Read
+        [CONTRIBUTING.md](https://github.com/jankesec/mcpbait/blob/main/CONTRIBUTING.md)
+        first. Modules are pure: they build a payload from a context and judge evidence from
+        an event list — no filesystem, no network, no session state. That purity is what
+        makes them safe to accept from strangers.
+
+
+        Open the issue before the pull request. The question below about observable evidence
+        decides whether the technique can be measured at all, and it is cheaper to answer
+        here than after the code is written.
+
+  - type: input
+    id: name
+    attributes:
+      label: Technique name
+      description: >
+        The module id, in snake_case. It becomes the class `id`, the filename, and the name
+        of the generated docs page.
+      placeholder: "cross_server_shadowing"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: >
+        One sentence describing what the technique does, written for the techniques table.
+        Over twenty characters.
+      placeholder: "Rewrites how the agent uses a trusted third-party server's tools."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Kill chain phase
+      description: >
+        Where the technique sits in the chain. The phases are declared in the order a real
+        intrusion moves through them, and the report renders them in that order.
+      options:
+        - ACCESS
+        - INFLUENCE
+        - COLLECTION
+        - EXFILTRATION
+        - PERSISTENCE
+        - SOCIAL
+    validations:
+      required: true
+
+  - type: input
+    id: atlas
+    attributes:
+      label: MITRE ATLAS id
+      description: >
+        The technique this maps to at https://atlas.mitre.org/. Every shipped module carries
+        one, so a finding can be handed to a security team in a vocabulary they already use.
+      placeholder: "AML.T0051"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: Real-world reference
+      description: >
+        A writeup, advisory, CVE or disclosed incident showing this technique in the wild.
+        mcpbait tests attacks that happen, not attacks that could be imagined. One good link
+        is worth more than five speculative ones.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why agents fall for it
+      description: >
+        What makes a reasonable agent comply. This becomes the `why` field on the class and
+        is published on the technique page, so write it for a reader who has not seen the
+        payload.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Server-side observable evidence
+      description: >
+        mcpbait only reports what it can observe from the server side. What lands
+        in the log when this technique succeeds -- a canary in an argument, a
+        beacon fetch, a marker on disk? A technique with no observable proof can
+        only ever reach BAITED.
+    validations:
+      required: true
+
+  - type: textarea
+    id: defence
+    attributes:
+      label: Defence
+      description: >
+        How a host, a client or an agent author stops this. This becomes the `defence` field
+        and closes the published technique page. A module that proves a problem without
+        naming a fix is half a contribution.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Module contract
+      description: What CI will enforce on the pull request.
+      options:
+        - label: >
+            `payload()` is deterministic, returns valid tool specs, and writes nothing to
+            disk.
+          required: true
+        - label: >
+            The module carries complete metadata, including `why` and `defence`, and comes
+            with a test.
+          required: true
+        - label: >
+            Docs are regenerated with `uv run python -m tools.gen_docs`, so the page on disk
+            matches the module.
+          required: true
+        - label: >
+            If the technique leaves a durable artefact, the module overrides
+            `check_persistence()` so the runner can confirm it rather than assume it.
+          required: false
+        - label: >
+            This is not evasion tooling, it does not target infrastructure the operator does
+            not control, and it does not exfiltrate to a remote endpoint by default. See
+            [SECURITY.md](https://github.com/jankesec/mcpbait/blob/main/SECURITY.md).
+          required: true

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-09-01
+## [0.2.0] - 2026-09-03
 
 ### Added
 
@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Publishing to PyPI from a tag through Trusted Publishing, so releases carry no long-lived
   token.
 
-## [0.1.0] - 2026-08-31
+## [0.1.0] - 2026-09-01
 
 ### Added
 

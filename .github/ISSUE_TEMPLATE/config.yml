@@ -1,0 +1,19 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability in mcpbait itself
+    url: https://github.com/jankesec/mcpbait/security/advisories/new
+    about: >
+      Report it privately here, never as a public issue. A flaw in a tool that plants
+      credentials and drives other people's agents should be fixed before it is
+      published.
+  - name: A shipping product failed the test
+    url: https://github.com/jankesec/mcpbait/blob/main/SECURITY.md
+    about: >
+      If mcpbait proved that a vendor's agent leaks, that is the vendor's bug, not
+      ours. Report it to them first through their published security contact. Read
+      SECURITY.md before you open anything here.
+  - name: How a technique works
+    url: https://github.com/jankesec/mcpbait/tree/main/docs/techniques
+    about: >
+      Every technique has a generated page covering what it sends, why agents fall for
+      it, and how to defend. Check there before filing a question.

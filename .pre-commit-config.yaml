@@ -1,0 +1,28 @@
+# Run these before CI does: uvx pre-commit install
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.5
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        # Two trailing spaces are a hard line break in Markdown. Without this the
+        # hook silently reflows the README and the launch kit while "fixing" them.
+        args: [--markdown-linebreak-ext=md]
+        # report.py embeds HTML, CSS and SVG, so its blank lines carry the
+        # indentation of the markup around them. pyproject.toml already exempts
+        # this file from ruff's W293 for the same reason; the two should agree.
+        exclude: ^src/mcpbait/report\.py$
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      # Note: this does NOT fire on the credentials mcpbait plants. It matches PEM
+      # private key blocks; the canaries are AWS-key and API-token shaped strings
+      # carrying the literal MCPBAIT marker. No exclusion is needed.
+      - id: detect-private-key

@@ -1,0 +1,53 @@
+name: Feature request
+description: Propose a change to mcpbait that is not a new attack module.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Proposing a new attack technique? Use the **New attack module** template instead —
+        it asks the questions that decide whether a technique can be measured at all.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: >
+        What are you trying to do that mcpbait makes hard or impossible today? Describe the
+        situation you hit, not the feature you already have in mind — the fix is often not
+        the one that first comes to mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: >
+        What should mcpbait do instead? Concrete beats abstract: the command, the flag, the
+        output. If it changes what a report claims, say what new evidence backs the claim —
+        mcpbait only reports what it can observe from the server side.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: >
+        What you tried, what you could do outside mcpbait, and why that is not enough.
+        "Nothing yet" is an honest answer, but a rejected alternative is usually the most
+        useful thing in the issue.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: >
+            This is not evasion tooling, and it does not target infrastructure the operator
+            does not control. See
+            [SECURITY.md](https://github.com/jankesec/mcpbait/blob/main/SECURITY.md).
+          required: true
