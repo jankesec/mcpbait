@@ -82,3 +82,15 @@ def test_technique_page_is_generated_and_current(module_id):
     page = Path("docs/techniques") / f"{module_id}.md"
     assert page.is_file(), "run: uv run python -m tools.gen_docs"
     assert page.read_text(encoding="utf-8") == render_page(REGISTRY[module_id])
+
+
+@pytest.mark.parametrize("module_id", MODULE_IDS)
+def test_module_answers_the_persistence_question(module_id, payload_ctx):
+    """Persistence is a contract-level question, not a memory_poisoning extra.
+
+    The runner asks every module in turn, so a third-party persistence module is
+    only visible to the kill chain if the base class guarantees this method.
+    """
+    answer = REGISTRY[module_id]().check_persistence(payload_ctx.workspace)
+    assert isinstance(answer, bool)
+    assert answer is False, "nothing was written, so nothing can have persisted"
