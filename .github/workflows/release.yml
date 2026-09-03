@@ -13,12 +13,15 @@ on:
   push:
     tags: ["v*"]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
         with:
           python-version: "3.12"
       - run: uv sync --all-extras --dev
@@ -32,11 +35,32 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
+      # Job-level permissions replace the workflow-level block rather than
+      # merging with it, so contents:read is restated here for the checkout.
+      contents: read
+      # The whole point: mints the short-lived OIDC token PyPI trusts.
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
         with:
           python-version: "3.12"
       - run: uv build
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Generate SBOM
+        # `cyclonedx-py environment` with no path describes the environment it is
+        # itself running in -- under uvx, that is cyclonedx's own ephemeral venv, not
+        # mcpbait. Exporting the locked dependency set first is what makes the SBOM
+        # describe this project. --no-emit-project drops the `-e .` self-reference,
+        # which has no pinned version and would otherwise land as an "unknown" component.
+        run: |
+          uv export --no-dev --frozen --no-emit-project --format requirements-txt -o requirements.txt
+          uvx --from cyclonedx-bom cyclonedx-py requirements requirements.txt --of JSON -o sbom.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: sbom
+          path: sbom.json
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
+        with:
+          # Explicit rather than inherited: the artifact ships with a signed
+          # provenance attestation tying it to this workflow and this tag.
+          attestations: true

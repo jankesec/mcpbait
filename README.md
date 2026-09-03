@@ -5,6 +5,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/mcpbait?color=00FF66&label=PyPI&logo=pypi&logoColor=white&style=for-the-badge)](https://pypi.org/project/mcpbait/)
 [![CI](https://img.shields.io/github/actions/workflow/status/jankesec/mcpbait/ci.yml?branch=main&label=CI&style=for-the-badge)](https://github.com/jankesec/mcpbait/actions)
+[![scorecard](https://api.securityscorecards.dev/projects/github.com/jankesec/mcpbait/badge?style=for-the-badge)](https://scorecard.dev/viewer/?uri=github.com/jankesec/mcpbait)
 [![MITRE ATLAS](https://img.shields.io/badge/MITRE%20ATLAS-Mapped-blueviolet?style=for-the-badge)](https://atlas.mitre.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)

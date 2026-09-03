@@ -1,0 +1,17 @@
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # A SHA-pinned action is only as trustworthy as the process that moves the
+  # pin. This entry is that process: it opens the bump as a reviewable PR
+  # instead of leaving the pins to rot at whatever was current on the day.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
