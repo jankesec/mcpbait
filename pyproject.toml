@@ -37,6 +37,7 @@ pythonpath = ["."]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = ["scratch"]
 
 [tool.ruff.lint]
 # Curated rather than exhaustive. ARG and PL are deliberately excluded: between

@@ -146,6 +146,13 @@ uvx mcpbait report --html audit-report.html
 uvx mcpbait uninstall --client claude-desktop --as local-system-indexer
 ```
 
+### 🖥️ Pro Interactive Dark-Mode Security Dashboard
+`mcpbait` generates standalone, air-gapped safe executive HTML reports featuring interactive MITRE ATLAS matrix filtering, circular resilience score gauges, forensic canary interception ledgers, and client remediation blueprints:
+
+<p align="center">
+  <img src="docs/dashboard.png" alt="mcpbait Enterprise Dark-Mode Security Dashboard" width="880" style="border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 12px 36px rgba(0,0,0,0.6);">
+</p>
+
 ---
 
 ### 2. Multi-Model Benchmarks & Matrix

@@ -12,6 +12,7 @@ build/
 # Internal working documents, kept locally
 docs/superpowers/
 .coverage
+scratch/
 
 # Generated report output
 docs/report.html
