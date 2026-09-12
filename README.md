@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/demo.gif" alt="mcpbait Enterprise Dark-Mode Security Dashboard" width="920" style="border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);">
+  <img src="docs/dashboard.png" alt="mcpbait Enterprise Dark-Mode Security Dashboard" width="920" style="border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);">
   <br><sub>Standalone, air-gapped safe Executive Security Dashboard generated via <code>mcpbait report --html audit.html</code></sub>
 </p>
 
