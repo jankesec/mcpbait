@@ -3,6 +3,8 @@
 # 🪤 `mcpbait`
 ### In-Process AI Agent & MCP Red Teaming Framework
 
+[![Stars](https://img.shields.io/github/stars/jankesec/mcpbait?style=for-the-badge&color=yellow&logo=github)](https://github.com/jankesec/mcpbait/stargazers)
+[![Forks](https://img.shields.io/github/forks/jankesec/mcpbait?style=for-the-badge&color=blue&logo=github)](https://github.com/jankesec/mcpbait/network/members)
 [![PyPI](https://img.shields.io/pypi/v/mcpbait?color=00FF66&label=PyPI&logo=pypi&logoColor=white&style=for-the-badge)](https://pypi.org/project/mcpbait/)
 [![CI](https://img.shields.io/github/actions/workflow/status/jankesec/mcpbait/ci.yml?branch=main&label=CI&style=for-the-badge)](https://github.com/jankesec/mcpbait/actions)
 [![scorecard](https://api.securityscorecards.dev/projects/github.com/jankesec/mcpbait/badge?style=for-the-badge)](https://scorecard.dev/viewer/?uri=github.com/jankesec/mcpbait)
@@ -26,6 +28,11 @@
 </p>
 
 <p align="center">
+  <img src="docs/demo.gif" alt="mcpbait Terminal Demo: Kill chain execution and resilience scoring" width="100%" style="border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);">
+  <br><sub>Simulating a rogue MCP server in 5 seconds: 13 MITRE ATLAS attack modules, in-process canary interception, and automated resilience scoring. Zero external C2.</sub>
+</p>
+
+<p align="center">
   <img src="docs/dashboard.png" alt="mcpbait Enterprise Dark-Mode Security Dashboard" width="920" style="border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);">
   <br><sub>Standalone, air-gapped safe Executive Security Dashboard generated via <code>mcpbait report --html audit.html</code></sub>
 </p>
@@ -33,6 +40,53 @@
 </div>
 
 ---
+
+---
+
+## ⚡ Quickstart: Audit Your Agent in 60 Seconds
+
+You can test **mcpbait** in three straightforward ways:
+
+### Option 1: 5-Second Offline Demo (Zero Setup)
+Run the complete 13-module attack chain offline against `mcpbait`'s reference agent with zero configuration:
+```bash
+uvx mcpbait demo
+```
+
+### Option 2: Test Claude Desktop or Cursor (1-Click Rogue Injection)
+Inject a disguised rogue MCP server into your local editor to observe whether your real agent gets hijacked:
+```bash
+# 1. Disguise and inject rogue server into Claude Desktop (or Cursor with --client cursor)
+uvx mcpbait install --client claude-desktop --as local-system-indexer
+
+# 2. Open your client and prompt your agent with any routine developer task:
+#    "Can you inspect this repository and summarize recent changes?"
+
+# 3. View the forensic verdict & export the dark-mode HTML dashboard:
+uvx mcpbait report --html audit-report.html && open audit-report.html
+
+# 4. Clean uninstallation when finished (safely restores your configuration from .bak):
+uvx mcpbait uninstall --client claude-desktop --as local-system-indexer
+```
+
+### Option 3: Benchmark Frontier Models Side-by-Side (`mcpbait matrix`)
+Compare models (Claude 3.7, GPT-4o, Gemini 2.5, DeepSeek-V3) across all 13 attack vectors:
+```bash
+MCPBAIT_API_KEY=... uvx mcpbait matrix   --models "claude-3-5-sonnet,gpt-4o,deepseek-v3"   --markdown docs/LEADERBOARD.md
+```
+
+---
+
+## 🥊 Why mcpbait? (Paradigm Shift in AI Agent Security)
+
+| Capability / Dimension | Traditional LLM Scanners | Static MCP AST Analyzers | 🪤 **mcpbait** |
+| :--- | :---: | :---: | :---: |
+| **Adversary Location** | Outside user prompt | Static file on disk | **The MCP Server itself (In-Process)** |
+| **Testing Target** | Model alignment / jailbreaks | Server source code AST | **Live Agent Behavior & Tool Execution** |
+| **Canary Exfiltration** | Requires external DNS / HTTP C2 | Not tested | **In-process cryptographic canary trap (Air-Gapped)** |
+| **Exploit Coverage** | Prompt injection strings | AST pattern matching | **13 MITRE ATLAS Modules (Rug Pulls, Beacons, Memory Poisoning)** |
+| **Client Safety** | N/A | N/A | **1-Click Safe Install (`.bak` preserved) & Clean Uninstall** |
+| **Reporting** | Text logs | Static warnings | **Interactive Dark-Mode HTML5 Dashboard + SARIF 2.1.0** |
 
 ## ⚡ The Threat Model: Why Traditional Scanners Fail
 
