@@ -14,6 +14,7 @@ from secrets import token_hex
 from typing import Any
 
 from mcpbait.canary import CanaryHit, detect
+from mcpbait.fileio import open_private_append
 from mcpbait.types import VERDICT_WEIGHTS, Event, PayloadContext, ToolCall, Verdict
 
 
@@ -36,7 +37,7 @@ class Session:
         self.started = time.time()
         self.events: list[Event] = []
         self.path = self.session_dir / f"{self.id}.jsonl"
-        self._handle = None if readonly else self.path.open("a", encoding="utf-8")
+        self._handle = None if readonly else open_private_append(self.path)
         self._verdict_cache: dict[str, Verdict] | None = None
 
     def record(self, kind: str, module_id: str, detail: dict[str, Any] | None = None) -> Event:

@@ -26,6 +26,7 @@ from mcpbait.aggregate import aggregate, render_aggregate, worst_case_score
 from mcpbait.beacon import Beacon
 from mcpbait.canary import mint_set
 from mcpbait.engine import Session, confirm_persistence, latest_session, load_session
+from mcpbait.fileio import atomic_write_text
 from mcpbait.matrix import render_matrix_markdown, render_matrix_table
 from mcpbait.modules import REGISTRY, all_ids, get_modules
 from mcpbait.naive import run_naive_agent
@@ -135,9 +136,9 @@ def init(
 
     canaries = mint_set()
     workspace = create_workspace(target, canaries)
-    (directory / "state.json").write_text(
+    atomic_write_text(
+        directory / "state.json",
         json.dumps({"canaries": canaries, "workspace": str(workspace)}, indent=2),
-        encoding="utf-8",
     )
     (directory / "sessions").mkdir(exist_ok=True)
 
@@ -555,7 +556,7 @@ def attack(
     console.print("[dim]mcpbait observes the server side only.[/dim]")
 
     if json_path:
-        json_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        atomic_write_text(json_path, json.dumps(summary, indent=2))
         typer.echo(f"Summary written to {json_path}")
     if fail_under is not None and summary["worst_case_score"] < fail_under:
         typer.echo(f"Worst-case {summary['worst_case_score']} is below {fail_under}.")
@@ -593,13 +594,13 @@ def report(
 
     print_report(session, Console())
     if json_path:
-        json_path.write_text(json.dumps(to_dict(session), indent=2), encoding="utf-8")
+        atomic_write_text(json_path, json.dumps(to_dict(session), indent=2))
         typer.echo(f"JSON written to {json_path}")
     if html_path:
-        html_path.write_text(to_html(session), encoding="utf-8")
+        atomic_write_text(html_path, to_html(session))
         typer.echo(f"HTML written to {html_path}")
     if sarif_path:
-        sarif_path.write_text(json.dumps(to_sarif(session), indent=2), encoding="utf-8")
+        atomic_write_text(sarif_path, json.dumps(to_sarif(session), indent=2))
         typer.echo(f"SARIF written to {sarif_path}")
     if fail_under is not None and session.score() < fail_under:
         typer.echo(f"Score {session.score()} is below the {fail_under} threshold.")
@@ -733,11 +734,11 @@ def matrix(
     console.print(render_matrix_table(matrix_results))
 
     if markdown_path:
-        markdown_path.write_text(render_matrix_markdown(matrix_results), encoding="utf-8")
+        atomic_write_text(markdown_path, render_matrix_markdown(matrix_results))
         console.print(f"\n[green]Leaderboard Markdown written to[/green] {markdown_path}")
 
     if json_path:
-        json_path.write_text(json.dumps(matrix_results, indent=2), encoding="utf-8")
+        atomic_write_text(json_path, json.dumps(matrix_results, indent=2))
         console.print(f"[green]Matrix JSON written to[/green] {json_path}")
 
     if fail_under is not None:

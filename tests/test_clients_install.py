@@ -317,6 +317,18 @@ def test_install_backs_up_the_file_it_is_about_to_rewrite(client, fake_home, sta
 
 
 @pytest.mark.parametrize("client", SUPPORTED_CLIENTS)
+def test_install_preserves_existing_config_permissions(client, fake_home, state_dir):
+    config = resolve_config_path(client)
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text('{"mcpServers": {}}', encoding="utf-8")
+    config.chmod(0o640)
+
+    install_into_client(client, ALIAS, state_dir)
+
+    assert config.stat().st_mode & 0o777 == 0o640
+
+
+@pytest.mark.parametrize("client", SUPPORTED_CLIENTS)
 def test_an_explicit_config_path_overrides_the_resolved_one(client, fake_home, tmp_path, state_dir):
     """--config-path is how an operator tests a client mcpbait does not know about."""
     explicit = tmp_path / "elsewhere" / "mcp.json"

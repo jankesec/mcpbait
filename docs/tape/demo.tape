@@ -15,6 +15,9 @@ Set Padding      22
 Set Margin       14
 Set MarginFill   "#000000"
 Set BorderRadius 10
+Set WindowBar    Colorful
+Set LineHeight   1.25
+Set CursorBlink  true
 Set Theme        { "name": "Termius Pro", "background": "#000000", "foreground": "#ffffff", "cursor": "#9aedfe", "cursorAccent": "#000000", "selection": "#2e3349", "black": "#000000", "red": "#ff5c57", "green": "#5af78e", "yellow": "#f3f99d", "blue": "#57c7ff", "magenta": "#ff6ac1", "cyan": "#9aedfe", "white": "#f1f1f0", "brightBlack": "#686868", "brightRed": "#ff5c57", "brightGreen": "#5af78e", "brightYellow": "#f3f99d", "brightBlue": "#57c7ff", "brightMagenta": "#ff6ac1", "brightCyan": "#9aedfe", "brightWhite": "#f1f1f0" }
 
 Set TypingSpeed  55ms

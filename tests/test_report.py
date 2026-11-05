@@ -49,6 +49,19 @@ def test_to_html_escapes_event_content(tmp_path, payload_ctx):
     assert "&lt;script&gt;" in html
 
 
+def test_to_html_is_a_restrained_evidence_report(tmp_path, payload_ctx):
+    session = Session(tmp_path, modules=[], ctx=payload_ctx)
+    html = to_html(session)
+
+    assert "mcpbait security assessment" in html
+    assert "No verified compromise evidence observed." in html
+    assert "background: var(--black)" in html
+    assert "linear-gradient" not in html
+    assert "Security Executive Dashboard" not in html
+    assert "onclick=\"switchTab('tab-overview', this)\"" in html
+    assert "No observed action is not proof" in html
+
+
 def test_tables_render_without_a_live_session(tmp_path, payload_ctx):
     from rich.console import Console
 

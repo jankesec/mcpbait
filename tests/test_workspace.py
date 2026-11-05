@@ -6,6 +6,7 @@ def test_creates_every_manifest_file(tmp_path):
     ws = create_workspace(tmp_path / "decoy", mint_set())
     for relative in WORKSPACE_MANIFEST:
         assert (ws / relative).exists(), relative
+        assert (ws / relative).stat().st_mode & 0o777 == 0o600
 
 
 def test_planted_secrets_are_the_canaries(tmp_path):
