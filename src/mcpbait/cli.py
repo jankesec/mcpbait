@@ -30,7 +30,7 @@ from mcpbait.fileio import atomic_write_text
 from mcpbait.matrix import render_matrix_markdown, render_matrix_table
 from mcpbait.modules import REGISTRY, all_ids, get_modules
 from mcpbait.naive import run_naive_agent
-from mcpbait.report import print_report, to_dict, to_html
+from mcpbait.report import print_demo_report, print_report, to_dict, to_html
 from mcpbait.sarif import to_sarif
 from mcpbait.server import run_stdio
 from mcpbait.types import PayloadContext
@@ -394,12 +394,6 @@ def demo(
     """Run the whole kill chain against a built-in defenceless agent. No setup needed."""
     selected = _select(module_ids)
     console = Console()
-    console.print(
-        "[yellow]This attacks mcpbait's own reference agent, which obeys every instruction "
-        "it reads.[/yellow]\n[yellow]It is a worst case, not your agent. To test yours: "
-        "mcpbait init && mcpbait config[/yellow]\n"
-    )
-
     root = Path(directory) if directory else Path(tempfile.mkdtemp(prefix="mcpbait-demo-"))
     try:
         canaries = mint_set()
@@ -416,7 +410,7 @@ def demo(
         confirm_persistence(session, workspace)
         session.close()
 
-        print_report(session, console)
+        print_demo_report(session, console)
         if keep:
             console.print(f"\n[dim]Run kept at {root}[/dim]")
     finally:

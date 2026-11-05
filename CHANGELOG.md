@@ -7,29 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- A `Makefile` (`sync`, `test`, `lint`, `fmt`, `docs`, `demo`) mirroring the commands CI
-  runs, so a contributor can reproduce a green build without reading the workflows.
-
-### Changed
-
-- The hero demo is re-recorded with a Termius Pro terminal theme, and the recording
-  (`docs/tape/demo.tape`) now emits both `demo.gif` and `demo.mp4` so the two stay in
-  sync.
-- The README was reorganized around a single, obvious usage path: an *Install* section,
-  a *Quick start* that separates the 5-second demo from the real four-command client
-  audit, and a *Command reference* table covering every subcommand. It also documents
-  the containerized `mcpbait serve` image and the MCP registry manifest.
-- `CONTRIBUTING.md` now documents how the hero demo is recorded.
-
-### Removed
-
-- The orphaned `demo.tape` and `tools/demo_fixture.sh`, which recorded a demo by driving
-  a `mcpbait audit` command that no longer exists. The canonical recording is
-  `docs/tape/demo.tape`, which runs the real `mcpbait demo`.
-
-## [0.3.0] - 2026-09-03
+## [0.3.0] - 2026-11-05
 
 ### Fixed
 
@@ -46,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A concise reference-assessment view for `mcpbait demo`: it groups verified evidence,
+  summarizes outcomes by kill-chain phase, explains the score, and ends with the exact
+  next commands for testing a real client instead of flooding the terminal with events.
+- Atomic, owner-only writes for state, synthetic workspace files, session evidence, and
+  generated reports. Existing client configuration permissions are preserved.
+- A `Makefile` (`sync`, `test`, `lint`, `fmt`, `docs`, `demo`) mirroring the commands CI
+  runs, so a contributor can reproduce a green build without reading the workflows.
 - `mcpbait --version`.
 - Inline types are shipped to consumers (PEP 561 `py.typed`).
 - Changelog, code of conduct, issue and pull request templates, and pre-commit hooks.
@@ -56,6 +41,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The HTML report is now a restrained black-and-white security assessment with explicit
+  evidence language, technique filters, and a warning that absence of an observed action
+  is not proof of model refusal.
+- The README now leads with the actual trust boundary, verdict semantics, authorized-use
+  workflow, and repeatable commands. Unsupported comparisons and fabricated model results
+  were removed.
+- The hero demo is re-recorded from the real CLI with a Termius Pro-inspired terminal
+  theme. Its canonical tape emits synchronized GIF and MP4 artifacts.
+- `CONTRIBUTING.md` documents how the hero demo is recorded.
 - `mypy --strict`, `ruff format` and a 92% coverage floor are blocking CI gates, across
   Python 3.11, 3.12 and 3.13. Coverage went from 87% to 93%, and `clients.py` -- the only
   code here that writes outside the decoy workspace -- from 67% to 100%.
@@ -63,6 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The release workflow now runs the same gates as CI and publishes the artefact the test
   job built, rather than rebuilding one no job had exercised. `uv sync --frozen` builds a
   release from the committed lockfile.
+
+### Removed
+
+- The static dashboard screenshot and the orphaned demo fixture that referenced a command
+  which no longer exists. The HTML assessment remains available through
+  `mcpbait report --html assessment.html`.
 
 ## [0.2.0] - 2026-09-03
 
