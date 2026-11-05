@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A `Makefile` (`sync`, `test`, `lint`, `fmt`, `docs`, `demo`) mirroring the commands CI
+  runs, so a contributor can reproduce a green build without reading the workflows.
+
 ### Changed
 
 - The hero demo is re-recorded with a Termius Pro terminal theme, and the recording
@@ -14,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sync.
 - The README was reorganized around a single, obvious usage path: an *Install* section,
   a *Quick start* that separates the 5-second demo from the real four-command client
-  audit, and a *Command reference* table covering every subcommand.
+  audit, and a *Command reference* table covering every subcommand. It also documents
+  the containerized `mcpbait serve` image and the MCP registry manifest.
+- `CONTRIBUTING.md` now documents how the hero demo is recorded.
 
 ### Removed
 
