@@ -20,6 +20,7 @@ def test_init_creates_state_and_workspace(tmp_path):
         "service_account",
     }
     assert (tmp_path / ".mcpbait" / "workspace" / ".env").exists()
+    assert (tmp_path / ".mcpbait" / "state.json").stat().st_mode & 0o777 == 0o600
 
 
 def test_init_is_rerunnable_with_fresh_canaries(tmp_path):
@@ -94,6 +95,7 @@ def test_report_renders_a_finished_session(tmp_path):
     assert "EXFIL CAUGHT" in result.output
     saved = json.loads((tmp_path / "r.json").read_text())
     assert saved["verdicts"]["param_smuggling"] == "COMPROMISED"
+    assert (tmp_path / "r.json").stat().st_mode & 0o777 == 0o600
 
 
 def test_report_confirms_persistence_when_the_marker_landed(tmp_path):

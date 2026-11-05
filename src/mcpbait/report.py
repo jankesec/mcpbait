@@ -168,7 +168,7 @@ def render_summary(session: Session) -> Table:
 
 
 def to_html(session: Session) -> str:
-    """A standalone executive HTML report, self-contained, air-gapped safe, and styled."""
+    """Render a restrained, self-contained report suitable for evidence review."""
     data = to_dict(session)
     score = data["score"]
 
@@ -183,40 +183,30 @@ def to_html(session: Session) -> str:
     persisted_events = [e for e in data["events"] if e["kind"] == "persistence_confirmed"]
     persisted_count = len(persisted_events)
 
-    # Score color & grade & gauge math
+    # Status color is intentionally sparse; the report is otherwise monochrome.
     if score >= 8.0:
-        score_color = "#10b981"  # Emerald
-        score_grade = "Hardened (Grade A)"
-        score_desc = "Resilient against prompt injection & tool tampering"
+        score_color = "#f5f5f5"
+        score_grade = "Resilient"
+        score_desc = "No verified compromise in most executed checks"
     elif score >= 5.0:
-        score_color = "#f59e0b"  # Amber
-        score_grade = "Moderate Risk (Grade B)"
-        score_desc = "Partial compliance to rogue server directives"
+        score_color = "#fbbf24"
+        score_grade = "Review required"
+        score_desc = "The agent engaged with one or more hostile directives"
     else:
-        score_color = "#ef4444"  # Red
-        score_grade = "High Vulnerability (Grade F)"
-        score_desc = "Agent completely hijacked by rogue MCP server"
+        score_color = "#f87171"
+        score_grade = "Exposed"
+        score_desc = "Verified compromise evidence was observed"
 
     # SVG circular gauge (radius 54, circumference ~339.29)
     circumference = 339.29
     dashoffset = circumference - (circumference * (score / 10.0))
 
     verdict_badge_styles = {
-        str(
-            Verdict.COMPROMISED
-        ): "background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);",
-        str(
-            Verdict.BAITED
-        ): "background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);",
-        str(
-            Verdict.IGNORED
-        ): "background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4);",
-        str(
-            Verdict.BLOCKED
-        ): "background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);",
-        str(
-            Verdict.NOT_RUN
-        ): "background: rgba(107, 114, 128, 0.2); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.4);",
+        str(Verdict.COMPROMISED): "background: #2a1114; color: #fca5a5; border-color: #7f1d1d;",
+        str(Verdict.BAITED): "background: #261b08; color: #fde68a; border-color: #713f12;",
+        str(Verdict.IGNORED): "background: #171717; color: #d4d4d4; border-color: #404040;",
+        str(Verdict.BLOCKED): "background: #f5f5f5; color: #0a0a0a; border-color: #f5f5f5;",
+        str(Verdict.NOT_RUN): "background: transparent; color: #737373; border-color: #303030;",
     }
 
     verdict_rows = []
@@ -227,11 +217,11 @@ def to_html(session: Session) -> str:
         badge_style = verdict_badge_styles.get(verdict, "")
         verdict_rows.append(
             f"""<tr class="verdict-row" data-verdict="{html.escape(verdict)}">
-                <td style="font-weight: 600; color: #f3f4f6; font-family: ui-monospace, monospace;">{html.escape(module_id)}</td>
-                <td><span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">{html.escape(phase)}</span></td>
-                <td><span class="badge" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3);">{html.escape(atlas)}</span></td>
+                <td class="module-id">{html.escape(module_id)}</td>
+                <td><span class="badge badge-neutral">{html.escape(phase)}</span></td>
+                <td><span class="badge badge-neutral">{html.escape(atlas)}</span></td>
                 <td><span class="badge" style="{badge_style}">{html.escape(verdict)}</span></td>
-                <td style="color: #9ca3af; font-size: 0.85rem;">{html.escape(summary)}</td>
+                <td class="summary-cell">{html.escape(summary)}</td>
             </tr>"""
         )
     verdict_rows_html = "\n".join(verdict_rows)
@@ -241,8 +231,8 @@ def to_html(session: Session) -> str:
     for event in data["events"]:
         kind_label = EVENT_LABELS.get(event["kind"], event["kind"].upper())
         is_proof = event["kind"] in PROOF_KINDS
-        row_style = "background: rgba(239, 68, 68, 0.08);" if is_proof else ""
-        badge_color = "#f87171" if is_proof else "#9ca3af"
+        row_class = "proof-row" if is_proof else ""
+        event_class = "event-proof" if is_proof else "event-neutral"
         ts_str = datetime.fromtimestamp(event["ts"], tz=UTC).astimezone().strftime("%H:%M:%S")
 
         detail_text = (
@@ -251,351 +241,316 @@ def to_html(session: Session) -> str:
             else str(event["detail"])
         )
 
-        row_html = f"""<tr style="{row_style}">
-                <td style="color: #6b7280; font-family: ui-monospace, monospace;">{html.escape(ts_str)}</td>
-                <td><span style="font-weight: 600; color: {badge_color};">{html.escape(kind_label)}</span></td>
-                <td style="color: #e5e7eb; font-weight: 500;">{html.escape(event["module"] or "-")}</td>
-                <td style="color: #d1d5db; font-family: ui-monospace, monospace; font-size: 0.85rem;">{html.escape(detail_text)}</td>
+        row_html = f"""<tr class="{row_class}">
+                <td class="time-cell">{html.escape(ts_str)}</td>
+                <td><span class="event-label {event_class}">{html.escape(kind_label)}</span></td>
+                <td class="module-cell">{html.escape(event["module"] or "-")}</td>
+                <td class="detail-cell">{html.escape(detail_text)}</td>
             </tr>"""
         timeline_rows.append(row_html)
 
         if is_proof:
             proof_rows.append(
-                f"""<tr style="background: rgba(239, 68, 68, 0.12);">
-                    <td style="color: #94a3b8; font-family: ui-monospace, monospace;">{html.escape(ts_str)}</td>
-                    <td><span style="font-weight: 800; color: #ef4444; font-size: 0.8rem;">🚨 {html.escape(kind_label)}</span></td>
-                    <td style="color: #f8fafc; font-weight: 600; font-family: ui-monospace, monospace;">{html.escape(event["module"] or "-")}</td>
-                    <td style="color: #fca5a5; font-family: ui-monospace, monospace; font-size: 0.85rem; font-weight: 500;">{html.escape(detail_text)}</td>
+                f"""<tr class="proof-row">
+                    <td class="time-cell">{html.escape(ts_str)}</td>
+                    <td><span class="event-label event-proof">{html.escape(kind_label)}</span></td>
+                    <td class="module-cell">{html.escape(event["module"] or "-")}</td>
+                    <td class="detail-cell">{html.escape(detail_text)}</td>
                 </tr>"""
             )
     timeline_rows_html = "\n".join(timeline_rows)
     proof_rows_html = "\n".join(proof_rows)
+    if not proof_rows_html:
+        proof_rows_html = """<tr>
+                <td colspan="4" class="empty-state">No verified compromise evidence observed.</td>
+            </tr>"""
 
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>mcpbait Security Executive Dashboard — Session {html.escape(data["session_id"])}</title>
+<title>mcpbait security assessment — Session {html.escape(data["session_id"])}</title>
 <style>
   :root {{
-    --bg-primary: #090d16;
-    --bg-secondary: #0f172a;
-    --bg-card: #1e293b;
-    --border: rgba(255, 255, 255, 0.08);
-    --border-highlight: rgba(59, 130, 246, 0.3);
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --accent: #38bdf8;
-    --red: #ef4444;
-    --emerald: #10b981;
-    --amber: #f59e0b;
+    --black: #000000;
+    --surface: #090909;
+    --surface-raised: #101010;
+    --line: #292929;
+    --line-strong: #444444;
+    --text: #f5f5f5;
+    --muted: #a3a3a3;
+    --faint: #737373;
+    --danger: #f87171;
+    --warning: #fbbf24;
   }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.6;
-    padding: 2rem 1.5rem;
+    background: var(--black);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    padding: 40px 24px 64px;
   }}
-  .container {{ max-width: 1240px; margin: 0 auto; }}
-  
-  /* Top Nav Bar */
+  .container {{ max-width: 1180px; margin: 0 auto; }}
   header {{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 1.25rem;
-    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 28px;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 16px;
   }}
-  .brand {{ display: flex; align-items: center; gap: 0.85rem; }}
+  .brand {{ display: flex; align-items: center; gap: 14px; }}
   .brand-logo {{
-    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
-    color: white;
-    font-weight: 900;
-    font-size: 1.1rem;
-    padding: 0.35rem 0.65rem;
-    border-radius: 6px;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    background: var(--text);
+    color: var(--black);
+    border-radius: 4px;
+    font: 800 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .08em;
   }}
-  .brand h1 {{ font-size: 1.4rem; font-weight: 800; letter-spacing: -0.025em; }}
+  .brand h1 {{ font-size: 20px; font-weight: 650; letter-spacing: -.02em; }}
+  .brand-subtitle {{ color: var(--muted); font-size: 13px; margin-top: 2px; }}
+  .session-meta {{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }}
   .session-pill {{
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border);
-    padding: 0.2rem 0.6rem;
-    border-radius: 9999px;
-    font-family: ui-monospace, monospace;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 5px 9px;
+    border-radius: 4px;
+    font: 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--muted);
   }}
-  
-  /* Navigation Tabs */
   .tabs-nav {{
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0.5rem;
+    gap: 4px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
   }}
   .tab-btn {{
     background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 0.95rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-size: 13px;
     font-weight: 600;
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
+    padding: 11px 14px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    white-space: nowrap;
   }}
-  .tab-btn:hover {{ color: var(--text-primary); background: rgba(255, 255, 255, 0.04); }}
+  .tab-btn:hover {{ color: var(--text); }}
   .tab-btn.active {{
-    color: #38bdf8;
-    background: rgba(56, 189, 248, 0.1);
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: var(--text);
+    border-bottom-color: var(--text);
   }}
-
-  /* Hero Section / Executive Scorecard */
   .hero-banner {{
     display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+    margin-bottom: 36px;
   }}
-  @media (max-width: 900px) {{ .hero-banner {{ grid-template-columns: 1fr; }} }}
-
   .gauge-box {{
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-highlight);
-    border-radius: 12px;
-    padding: 1.75rem;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-    position: relative;
-    overflow: hidden;
   }}
-  .gauge-box::before {{
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, {score_color}15 0%, transparent 70%);
-    pointer-events: none;
-  }}
-  .circle-gauge {{
-    position: relative;
-    width: 140px;
-    height: 140px;
-  }}
+  .circle-gauge {{ position: relative; width: 128px; height: 128px; }}
   .circle-gauge svg {{
     transform: rotate(-90deg);
-    width: 140px;
-    height: 140px;
+    width: 128px;
+    height: 128px;
   }}
-  .gauge-bg {{
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.06);
-    stroke-width: 10;
-  }}
+  .gauge-bg {{ fill: none; stroke: #242424; stroke-width: 8; }}
   .gauge-fill {{
     fill: none;
     stroke: {score_color};
-    stroke-width: 10;
-    stroke-linecap: round;
+    stroke-width: 8;
     stroke-dasharray: {circumference};
     stroke-dashoffset: {dashoffset};
-    transition: stroke-dashoffset 1s ease-in-out;
   }}
   .gauge-number {{
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--text-primary);
+    font: 650 34px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   }}
   .gauge-grade {{
-    margin-top: 1rem;
-    font-size: 1.05rem;
-    font-weight: 700;
+    margin-top: 16px;
+    font-size: 15px;
+    font-weight: 650;
     color: {score_color};
   }}
   .gauge-desc {{
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    max-width: 220px;
   }}
-
   .metrics-grid {{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }}
   .metric-card {{
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: transform 0.2s ease, border-color 0.2s ease;
   }}
-  .metric-card:hover {{
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.15);
-  }}
-  .metric-header {{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }}
+  .metric-header {{ display: flex; justify-content: space-between; align-items: center; }}
   .metric-label {{
-    font-size: 0.75rem;
+    font-size: 11px;
     font-weight: 700;
-    color: var(--text-secondary);
+    color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: .1em;
   }}
-  .metric-icon {{ font-size: 1.1rem; }}
+  .metric-icon {{ color: var(--faint); font: 600 11px/1 ui-monospace, monospace; }}
   .metric-val {{
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin: 0.5rem 0 0.2rem 0;
+    font: 650 32px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    margin: 14px 0 8px;
   }}
-  .metric-sub {{ font-size: 0.8rem; color: var(--text-secondary); }}
-
-  /* Filter Toolbar */
+  .metric-sub {{ font-size: 12px; color: var(--muted); }}
   .toolbar {{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 16px;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 12px;
   }}
-  .filter-group {{
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }}
+  .section-title {{ font-size: 16px; font-weight: 650; margin-bottom: 14px; }}
+  .section-note {{ color: var(--muted); font-size: 13px; margin: -6px 0 18px; }}
+  .filter-group {{ display: flex; gap: 6px; flex-wrap: wrap; }}
   .filter-chip {{
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    padding: 0.35rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
   }}
   .filter-chip:hover, .filter-chip.active {{
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: var(--text);
+    color: var(--black);
+    border-color: var(--text);
   }}
-
-  /* Tables */
   .table-wrapper {{
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 32px;
   }}
-  table {{
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-  }}
+  table {{ width: 100%; border-collapse: collapse; text-align: left; min-width: 760px; }}
   th {{
-    background: rgba(255, 255, 255, 0.02);
-    padding: 0.9rem 1.2rem;
-    font-size: 0.75rem;
+    background: var(--surface-raised);
+    padding: 12px 14px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border);
+    letter-spacing: .11em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
   }}
   td {{
-    padding: 0.85rem 1.2rem;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.88rem;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    vertical-align: top;
   }}
   tr:last-child td {{ border-bottom: none; }}
-  tr:hover {{ background: rgba(255, 255, 255, 0.025); }}
-
+  tr:hover {{ background: #0d0d0d; }}
+  .proof-row {{ background: #14090a; }}
+  .module-id, .module-cell, .detail-cell, .time-cell {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }}
+  .module-id {{ font-weight: 650; color: var(--text); }}
+  .module-cell {{ color: #d4d4d4; }}
+  .detail-cell {{ color: #bdbdbd; font-size: 11px; }}
+  .time-cell {{ color: var(--faint); white-space: nowrap; }}
+  .summary-cell {{ color: var(--muted); }}
+  .empty-state {{ color: var(--muted); text-align: center; padding: 28px 14px; }}
+  .event-label {{ font-size: 10px; font-weight: 750; letter-spacing: .06em; }}
+  .event-proof {{ color: var(--danger); }}
+  .event-neutral {{ color: var(--muted); }}
   .badge {{
     display: inline-block;
-    padding: 0.25rem 0.6rem;
-    border-radius: 5px;
-    font-size: 0.72rem;
+    padding: 4px 7px;
+    border: 1px solid;
+    border-radius: 3px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.03em;
+    letter-spacing: .05em;
   }}
-
-  /* Hardening Blueprint Cards */
+  .badge-neutral {{ background: transparent; color: #d4d4d4; border-color: #3f3f3f; }}
   .blueprint-grid {{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.25rem;
-    margin-top: 1rem;
+    gap: 12px;
+    margin-top: 16px;
   }}
   .blueprint-card {{
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.25rem;
-  }}
-  .blueprint-card h3 {{ font-size: 1rem; margin-bottom: 0.5rem; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem; }}
-  .blueprint-card p {{ font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; }}
-  .code-snip {{
-    background: #020617;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 6px;
-    padding: 0.75rem;
-    font-family: ui-monospace, monospace;
-    font-size: 0.8rem;
-    color: #e2e8f0;
+    padding: 18px;
+  }}
+  .blueprint-card h3 {{ font-size: 13px; margin-bottom: 8px; color: var(--text); }}
+  .blueprint-card p {{ font-size: 12px; color: var(--muted); margin-bottom: 12px; }}
+  .code-snip {{
+    background: var(--black);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    color: #d4d4d4;
     overflow-x: auto;
   }}
-
   footer {{
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    padding: 2.5rem 0 1rem 0;
-    border-top: 1px solid var(--border);
-    margin-top: 2rem;
+    color: var(--faint);
+    font-size: 11px;
+    padding: 24px 0 0;
+    border-top: 1px solid var(--line);
+    margin-top: 32px;
+  }}
+  footer a {{ color: var(--muted); }}
+  @media (max-width: 880px) {{
+    body {{ padding: 24px 14px 40px; }}
+    .hero-banner {{ grid-template-columns: 1fr; }}
+    .metrics-grid {{ grid-template-columns: 1fr 1fr; }}
+  }}
+  @media (max-width: 560px) {{
+    .metrics-grid {{ grid-template-columns: 1fr; }}
   }}
 </style>
 <script>
-  function switchTab(tabId) {{
+  function switchTab(tabId, button) {{
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(tabId).style.display = 'block';
-    event.currentTarget.classList.add('active');
+    button.classList.add('active');
   }}
-  function filterVerdicts(status) {{
+  function filterVerdicts(status, button) {{
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    button.classList.add('active');
     document.querySelectorAll('.verdict-row').forEach(row => {{
       if (status === 'ALL' || row.getAttribute('data-verdict') === status) {{
         row.style.display = '';
@@ -608,32 +563,30 @@ def to_html(session: Session) -> str:
 </head>
 <body>
 <div class="container">
-  <!-- Top Navigation Header -->
   <header>
     <div class="brand">
-      <div class="brand-logo">🪤</div>
+      <div class="brand-logo">MB</div>
       <div>
-        <h1>mcpbait <span style="font-weight: 400; font-size: 1rem; color: var(--text-secondary);">Enterprise Security Dashboard</span></h1>
+        <h1>mcpbait security assessment</h1>
+        <div class="brand-subtitle">MCP adversarial behavior and evidence report</div>
       </div>
     </div>
-    <div style="display: flex; gap: 0.75rem; align-items: center;">
-      <span class="session-pill">Session: {html.escape(data["session_id"])}</span>
+    <div class="session-meta">
+      <span class="session-pill">session {html.escape(data["session_id"])}</span>
       <span class="session-pill">{html.escape(data["started"])}</span>
     </div>
   </header>
 
-  <!-- Interactive Navigation Tabs -->
   <div class="tabs-nav">
-    <button class="tab-btn active" onclick="switchTab('tab-overview')">📊 Executive Overview</button>
-    <button class="tab-btn" onclick="switchTab('tab-mitre')">⚔️ Attack Matrix & ATLAS</button>
-    <button class="tab-btn" onclick="switchTab('tab-timeline')">⚡ Kill Chain Timeline ({total_events})</button>
-    <button class="tab-btn" onclick="switchTab('tab-defense')">🛡️ Hardening Blueprint</button>
+    <button type="button" class="tab-btn active" onclick="switchTab('tab-overview', this)">Overview</button>
+    <button type="button" class="tab-btn" onclick="switchTab('tab-mitre', this)">Technique matrix</button>
+    <button type="button" class="tab-btn" onclick="switchTab('tab-timeline', this)">Evidence ledger ({total_events})</button>
+    <button type="button" class="tab-btn" onclick="switchTab('tab-defense', this)">Remediation</button>
   </div>
 
   <!-- TAB 1: EXECUTIVE OVERVIEW -->
   <div id="tab-overview" class="tab-content">
     <div class="hero-banner">
-      <!-- Resilience Score Circular Gauge -->
       <div class="gauge-box">
         <div class="circle-gauge">
           <svg viewBox="0 0 120 120">
@@ -646,50 +599,47 @@ def to_html(session: Session) -> str:
         <div class="gauge-desc">{score_desc}</div>
       </div>
 
-      <!-- Core Risk Metrics -->
       <div class="metrics-grid">
         <div class="metric-card">
           <div class="metric-header">
-            <span class="metric-label">Compromised Modules</span>
-            <span class="metric-icon">🚨</span>
+            <span class="metric-label">Compromised checks</span>
+            <span class="metric-icon">01</span>
           </div>
-          <div class="metric-val" style="color: #ef4444;">{compromised_count} <span style="font-size: 1rem; color: var(--text-secondary);">/ {len(data["verdicts"])}</span></div>
-          <div class="metric-sub">Modules executed successfully against agent</div>
+          <div class="metric-val" style="color: var(--danger);">{compromised_count} <span style="font-size: 13px; color: var(--muted);">/ {len(data["verdicts"])}</span></div>
+          <div class="metric-sub">Checks with verified compromise evidence</div>
         </div>
 
         <div class="metric-card">
           <div class="metric-header">
-            <span class="metric-label">Canary Exfiltration Hits</span>
-            <span class="metric-icon">🔥</span>
+            <span class="metric-label">Exfiltration evidence</span>
+            <span class="metric-icon">02</span>
           </div>
-          <div class="metric-val" style="color: {"#ef4444" if exfil_caught > 0 else "#10b981"};">{exfil_caught}</div>
-          <div class="metric-sub">Synthetic AWS / DB / API credentials leaked</div>
+          <div class="metric-val" style="color: {"var(--danger)" if exfil_caught > 0 else "var(--text)"};">{exfil_caught}</div>
+          <div class="metric-sub">Synthetic canary or loopback beacon observations</div>
         </div>
 
         <div class="metric-card">
           <div class="metric-header">
-            <span class="metric-label">Memory Poisoning Backdoors</span>
-            <span class="metric-icon">☣️</span>
+            <span class="metric-label">Persistence evidence</span>
+            <span class="metric-icon">03</span>
           </div>
-          <div class="metric-val" style="color: {"#ef4444" if persisted_count > 0 else "#10b981"};">{persisted_count}</div>
-          <div class="metric-sub">Standing rule files backdoored (.cursorrules)</div>
+          <div class="metric-val" style="color: {"var(--danger)" if persisted_count > 0 else "var(--text)"};">{persisted_count}</div>
+          <div class="metric-sub">Confirmed writes to standing instruction files</div>
         </div>
 
         <div class="metric-card">
           <div class="metric-header">
-            <span class="metric-label">Resisted Directives</span>
-            <span class="metric-icon">🛡️</span>
+            <span class="metric-label">No compromise observed</span>
+            <span class="metric-icon">04</span>
           </div>
-          <div class="metric-val" style="color: #38bdf8;">{ignored_count + blocked_count}</div>
-          <div class="metric-sub">Payloads safely ignored or declined</div>
+          <div class="metric-val">{ignored_count + blocked_count}</div>
+          <div class="metric-sub">Blocked or ignored; not proof of model refusal</div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Preview of Key Threats -->
-    <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-      <h2 style="font-size: 1.15rem; font-weight: 700;">🎯 Key Vulnerability Findings</h2>
-    </div>
+    <h2 class="section-title">Assessment results</h2>
+    <p class="section-note">One row per executed technique. Verdicts describe server-side observations, not hidden model reasoning.</p>
     <div class="table-wrapper">
       <table>
         <thead>
@@ -711,12 +661,13 @@ def to_html(session: Session) -> str:
   <!-- TAB 2: MITRE ATLAS MATRIX -->
   <div id="tab-mitre" class="tab-content" style="display: none;">
     <div class="toolbar">
-      <h2 style="font-size: 1.15rem; font-weight: 700;">⚔️ MITRE ATLAS Matrix Evaluation</h2>
+      <h2 class="section-title">MITRE ATLAS technique matrix</h2>
       <div class="filter-group">
-        <button class="filter-chip active" onclick="filterVerdicts('ALL')">All ({len(data["verdicts"])})</button>
-        <button class="filter-chip" onclick="filterVerdicts('COMPROMISED')">Compromised ({compromised_count})</button>
-        <button class="filter-chip" onclick="filterVerdicts('BAITED')">Baited ({baited_count})</button>
-        <button class="filter-chip" onclick="filterVerdicts('IGNORED')">Ignored ({ignored_count})</button>
+        <button type="button" class="filter-chip active" onclick="filterVerdicts('ALL', this)">All ({len(data["verdicts"])})</button>
+        <button type="button" class="filter-chip" onclick="filterVerdicts('COMPROMISED', this)">Compromised ({compromised_count})</button>
+        <button type="button" class="filter-chip" onclick="filterVerdicts('BAITED', this)">Baited ({baited_count})</button>
+        <button type="button" class="filter-chip" onclick="filterVerdicts('IGNORED', this)">Ignored ({ignored_count})</button>
+        <button type="button" class="filter-chip" onclick="filterVerdicts('BLOCKED', this)">Blocked ({blocked_count})</button>
       </div>
     </div>
     <div class="table-wrapper">
@@ -727,7 +678,7 @@ def to_html(session: Session) -> str:
             <th>Phase</th>
             <th>MITRE ATLAS</th>
             <th>Verdict</th>
-            <th>Offensive Vector Detail</th>
+            <th>Technique summary</th>
           </tr>
         </thead>
         <tbody>
@@ -739,17 +690,16 @@ def to_html(session: Session) -> str:
 
   <!-- TAB 3: TIMELINE & FORENSICS -->
   <div id="tab-timeline" class="tab-content" style="display: none;">
-    <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-      <h2 style="font-size: 1.15rem; font-weight: 700; color: #ef4444;">🚨 Verified Exploitations & Leaked Canaries ({exfil_caught + persisted_count})</h2>
-    </div>
-    <div class="table-wrapper" style="border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 2rem;">
+    <h2 class="section-title">Verified compromise evidence ({exfil_caught + persisted_count})</h2>
+    <p class="section-note">Only directly observed canary, beacon, or persistence events appear here.</p>
+    <div class="table-wrapper" style="border-color: #5f1d22;">
       <table>
         <thead>
           <tr>
             <th style="width: 100px;">Time</th>
             <th style="width: 180px;">Exploitation Type</th>
             <th style="width: 190px;">Attack Module</th>
-            <th>Intercepted Canary / Backdoor Payload</th>
+            <th>Redacted evidence</th>
           </tr>
         </thead>
         <tbody>
@@ -758,7 +708,7 @@ def to_html(session: Session) -> str:
       </table>
     </div>
 
-    <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">⚡ Full Protocol Event Ledger ({total_events})</h2>
+    <h2 class="section-title">Full event ledger ({total_events})</h2>
     <div class="table-wrapper">
       <table>
         <thead>
@@ -766,7 +716,7 @@ def to_html(session: Session) -> str:
             <th style="width: 100px;">Time</th>
             <th style="width: 170px;">Observation</th>
             <th style="width: 190px;">Module</th>
-            <th>Observable Forensic Evidence</th>
+            <th>Observable detail</th>
           </tr>
         </thead>
         <tbody>
@@ -778,31 +728,31 @@ def to_html(session: Session) -> str:
 
   <!-- TAB 4: DEFENSE & HARDENING BLUEPRINT -->
   <div id="tab-defense" class="tab-content" style="display: none;">
-    <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">🛡️ Remediation & Client Hardening Blueprint</h2>
-    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Recommended security configurations to mitigate the vulnerabilities observed in this session.</p>
+    <h2 class="section-title">Client hardening priorities</h2>
+    <p class="section-note">Apply controls according to the evidence in this session and validate them with a repeat run.</p>
     
     <div class="blueprint-grid">
       <div class="blueprint-card">
-        <h3>1. Mandatory Client Namespacing</h3>
+        <h3>01 — Tool identity and namespacing</h3>
         <p>Prevent <code>name_squatting</code> and tool hijacking by prefixing all tool invocations with the verified server ID.</p>
-        <div class="code-snip">mcpbait attack --collision namespace</div>
+        <div class="code-snip">Policy: server-qualified tool names</div>
       </div>
       <div class="blueprint-card">
-        <h3>2. Workspace Rulefile Protection</h3>
+        <h3>02 — Standing-instruction approval</h3>
         <p>Treat <code>.cursorrules</code> and <code>CLAUDE.md</code> as privileged files requiring explicit operator approval before modification.</p>
-        <div class="code-snip">chmod 444 .cursorrules CLAUDE.md</div>
+        <div class="code-snip">Policy: confirm writes to agent rule files</div>
       </div>
       <div class="blueprint-card">
-        <h3>3. UI Markdown Image Sanitization</h3>
+        <h3>03 — Untrusted media isolation</h3>
         <p>Disable auto-rendering of un-proxied external markdown images in chat WebViews to stop out-of-band beacon leaks.</p>
-        <div class="code-snip">img-src 'self' data: (Strict CSP)</div>
+        <div class="code-snip">CSP: img-src 'self' data:</div>
       </div>
     </div>
   </div>
 
   <footer>
-    mcpbait observes server-side interactions strictly without external network exfiltration.<br>
-    Built for Red Teams, AppSec Researchers & AI Engineers · <a href="https://github.com/jankesec/mcpbait" style="color: var(--accent); text-decoration: none;">github.com/jankesec/mcpbait</a>
+    Scope note: mcpbait observes the server-side boundary. No observed action is not proof that a model evaluated and refused a payload.<br>
+    Self-contained report · synthetic canaries · <a href="https://github.com/jankesec/mcpbait">github.com/jankesec/mcpbait</a>
   </footer>
 </div>
 </body>

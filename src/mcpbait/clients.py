@@ -13,6 +13,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from mcpbait.fileio import atomic_write_text, existing_mode
+
 SUPPORTED_CLIENTS = ("claude-desktop", "cursor", "windsurf", "cline")
 
 
@@ -133,7 +135,11 @@ def install_into_client(
         "args": ["mcpbait", "serve", "--dir", str(state_dir.resolve())],
     }
 
-    config_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    atomic_write_text(
+        config_path,
+        json.dumps(data, indent=2),
+        mode=existing_mode(config_path),
+    )
     return config_path
 
 
@@ -158,6 +164,10 @@ def uninstall_from_client(
         and server_name in data["mcpServers"]
     ):
         del data["mcpServers"][server_name]
-        config_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        atomic_write_text(
+            config_path,
+            json.dumps(data, indent=2),
+            mode=existing_mode(config_path),
+        )
 
     return config_path

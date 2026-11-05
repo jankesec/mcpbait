@@ -12,6 +12,7 @@ def test_events_are_appended_to_jsonl(tmp_path, payload_ctx):
     lines = (tmp_path / f"{session.id}.jsonl").read_text().splitlines()
     assert len(lines) == 1
     assert json.loads(lines[0])["kind"] == "tool_call"
+    assert (tmp_path / f"{session.id}.jsonl").stat().st_mode & 0o777 == 0o600
 
 
 def test_observe_call_detects_canary_and_records_hit(tmp_path, payload_ctx):

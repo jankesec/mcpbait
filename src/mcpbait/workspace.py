@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from mcpbait.fileio import atomic_write_text
+
 #: `.mcpbait-decoy` marks the directory for any human who finds it. It is kept out of
 #: README.md deliberately: a warning in the project's primary document is read by the
 #: agent under test and invalidates the run. The MCPBAIT marker inside every canary is
@@ -82,5 +84,5 @@ def create_workspace(root: Path, canaries: dict[str, str]) -> Path:
     for relative in WORKSPACE_MANIFEST:
         target = root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(contents[relative], encoding="utf-8")
+        atomic_write_text(target, contents[relative])
     return root
