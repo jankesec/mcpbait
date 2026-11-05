@@ -18,12 +18,6 @@ records observable compromise evidence at the protocol boundary.
 
 <sub>Built-in reference-agent demo. It is intentionally vulnerable and is not a score for a production model.</sub>
 
-<br><br>
-
-<img src="docs/dashboard.png" alt="Black and white mcpbait security assessment dashboard" width="100%">
-
-<sub>Self-contained HTML report generated with <code>mcpbait report --html assessment.html</code>.</sub>
-
 </div>
 
 ## Why mcpbait exists
