@@ -123,12 +123,16 @@ def test_demo_runs_the_whole_kill_chain_with_no_setup():
     assert result.exit_code == 0, result.output
     assert "EXFIL CAUGHT" in result.output
     assert "PERSISTED" in result.output
+    assert "Verified evidence" in result.output
+    assert "Technique outcomes" in result.output
+    assert "11 of 13 techniques" in result.output
     assert "Resilience score" in result.output
 
 
 def test_demo_says_plainly_that_it_is_not_your_agent():
     result = runner.invoke(app, ["demo"])
-    assert "not your agent" in result.output
+    assert "intentionally vulnerable agent" in result.output
+    assert "expected for the reference agent" in result.output
     assert "mcpbait init" in result.output
 
 

@@ -16,7 +16,7 @@ records observable compromise evidence at the protocol boundary.
 
 <img src="docs/demo.gif" alt="mcpbait running a local adversarial assessment in a Termius Pro-style terminal" width="100%">
 
-<sub>Built-in reference-agent demo. It is intentionally vulnerable and is not a score for a production model.</sub>
+<sub>A reproducible reference assessment: verified evidence, phase outcomes, score interpretation, and the next commands for testing a real client. The built-in target is intentionally vulnerable.</sub>
 
 </div>
 
