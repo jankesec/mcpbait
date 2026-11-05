@@ -4,6 +4,7 @@
 # gif, so what the README shows always matches what the tool actually prints.
 
 Output docs/demo.gif
+Output docs/demo.mp4
 
 Set Shell        zsh
 Set FontFamily   "Menlo"
@@ -12,9 +13,9 @@ Set Width        1320
 Set Height       900
 Set Padding      22
 Set Margin       14
-Set MarginFill   "#0b0f14"
+Set MarginFill   "#141729"
 Set BorderRadius 10
-Set Theme        { "background": "#0b0f14", "foreground": "#d7dee7", "cursor": "#00ff66", "selection": "#1d2733", "black": "#0b0f14", "red": "#ff5f6b", "green": "#00ff66", "yellow": "#ffc857", "blue": "#5aa9ff", "magenta": "#c792ea", "cyan": "#4dd0e1", "white": "#d7dee7", "brightBlack": "#5b6773", "brightRed": "#ff8892", "brightGreen": "#5cffa0", "brightYellow": "#ffd98a", "brightBlue": "#8cc4ff", "brightMagenta": "#ddb6ff", "brightCyan": "#89e6f0", "brightWhite": "#ffffff" }
+Set Theme        { "name": "Termius Pro", "background": "#141729", "foreground": "#ffffff", "cursor": "#9aedfe", "cursorAccent": "#141729", "selection": "#2e3349", "black": "#000000", "red": "#ff5c57", "green": "#5af78e", "yellow": "#f3f99d", "blue": "#57c7ff", "magenta": "#ff6ac1", "cyan": "#9aedfe", "white": "#f1f1f0", "brightBlack": "#686868", "brightRed": "#ff5c57", "brightGreen": "#5af78e", "brightYellow": "#f3f99d", "brightBlue": "#57c7ff", "brightMagenta": "#ff6ac1", "brightCyan": "#9aedfe", "brightWhite": "#f1f1f0" }
 
 Set TypingSpeed  55ms
 Set PlaybackSpeed 1.0

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The hero demo is re-recorded with a Termius Pro terminal theme, and the recording
+  (`docs/tape/demo.tape`) now emits both `demo.gif` and `demo.mp4` so the two stay in
+  sync.
+- The README was reorganized around a single, obvious usage path: an *Install* section,
+  a *Quick start* that separates the 5-second demo from the real four-command client
+  audit, and a *Command reference* table covering every subcommand.
+
+### Removed
+
+- The orphaned `demo.tape` and `tools/demo_fixture.sh`, which recorded a demo by driving
+  a `mcpbait audit` command that no longer exists. The canonical recording is
+  `docs/tape/demo.tape`, which runs the real `mcpbait demo`.
+
 ## [0.3.0] - 2026-09-03
 
 ### Fixed
