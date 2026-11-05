@@ -87,6 +87,19 @@ pip install 'mcpbait[http]'
 The rest of this README uses `uvx mcpbait …` because it works everywhere with no setup.
 Replace `uvx mcpbait` with `mcpbait` if you installed it persistently.
 
+### Run as a containerized MCP server
+
+A [`Dockerfile`](Dockerfile) ships for running `mcpbait` as a stdio MCP server inside a
+container:
+
+```bash
+docker build -t mcpbait .
+docker run -i --rm mcpbait     # `mcpbait serve` over stdio
+```
+
+The image and the [`server.json`](server.json) MCP registry manifest are what
+[Glama's automated evaluation](glama.json) uses to exercise the server.
+
 ---
 
 ## Quick start
