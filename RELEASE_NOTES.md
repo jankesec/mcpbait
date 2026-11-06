@@ -22,3 +22,6 @@ this real workflow, inspects status, and produces a JSON report from the retaine
 All diagnostics and reference runs remain local: synthetic data, loopback beacon, no API
 key, no model, and no external service. Release assets include the tested wheel, source
 distribution, SHA-256 checksums, and CycloneDX SBOM.
+
+The release also raises the MCP SDK floor to 2.2 and refreshes the locked MCP, PyJWT,
+certifi, and OpenTelemetry dependencies to their current patched release lines.

@@ -28,6 +28,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   coherent workflow from diagnosis through retained evidence and reporting.
 - Tag workflows now publish a checksummed GitHub release and SBOM after the tested wheel
   reaches PyPI.
+- Raised the MCP SDK floor to 2.2 and refreshed the locked MCP, PyJWT, certifi, and
+  OpenTelemetry packages to their patched release lines.
+
+### Security
+
+- Resolved the actionable critical, high, and medium Dependabot advisories in the locked
+  runtime dependency graph. One upstream PyJWT advisory currently has no patched version;
+  the lock uses the newest available release.
 
 ## [0.3.0] - 2026-11-05
 
