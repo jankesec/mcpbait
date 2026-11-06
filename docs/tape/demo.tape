@@ -25,14 +25,42 @@ Set PlaybackSpeed 1.0
 
 # Put the local build on PATH and identify the assessment context.
 Hide
-Type "export PATH=$PWD/.venv/bin:$PATH; export PS1='%F{cyan}security@workstation%f %F{magenta}~/mcpbait%f %# '; clear"  Enter
+Type "export PATH=$PWD/.venv/bin:$PATH; export PS1='%F{cyan}security@workstation%f %F{magenta}~/mcpbait%f %# '; mkdir -p .demo; find .demo -mindepth 1 -delete; clear"  Enter
 Sleep 1s
 Show
 
 Sleep 800ms
-Type "mcpbait demo"
+Type "mcpbait doctor --dir .demo"
+Sleep 300ms
+Enter
+Sleep 4s
+
+Type "clear"
+Enter
+Sleep 500ms
+Type "mcpbait demo --dir .demo"
 Sleep 500ms
 Enter
 
-# The run itself is fast; the pause is so a reader can read the evidence story.
+# The reference assessment is real and deterministic; pause for the evidence story.
 Sleep 8s
+
+Type "clear"
+Enter
+Sleep 500ms
+Type "mcpbait status --dir .demo"
+Sleep 300ms
+Enter
+Sleep 4s
+
+Type "mcpbait report --dir .demo --json .demo/assessment.json >/dev/null"
+Sleep 300ms
+Enter
+Sleep 2s
+Type "find .demo -maxdepth 2 -type f | sort"
+Enter
+Sleep 6s
+
+Hide
+Type "find .demo -mindepth 1 -delete; rmdir .demo; clear"
+Enter

@@ -38,7 +38,7 @@ from mcpbait.workspace import WORKSPACE_MANIFEST, create_workspace
 
 app = typer.Typer(
     add_completion=False,
-    help="Prove whether an MCP-speaking agent can be hijacked by a malicious server.",
+    help="Evidence-led security assessments for MCP clients and AI agents.",
 )
 
 DirOption = Annotated[Path, typer.Option("--dir", help="mcpbait state directory.")]
@@ -64,7 +64,7 @@ def main(
         ),
     ] = False,
 ) -> None:
-    """Prove whether an MCP-speaking agent can be hijacked by a malicious server."""
+    """Evidence-led security assessments for MCP clients and AI agents."""
 
 
 def _beacon_recorder(session: Session) -> Callable[[str, dict[str, str]], None]:
@@ -104,7 +104,157 @@ def _select(module_ids: str | None) -> list[str] | None:
     return selected
 
 
-@app.command()
+def _read_state(directory: Path) -> tuple[dict[str, Any] | None, str | None]:
+    """Read state for diagnostics without exiting or mutating the workspace."""
+    state_file = directory / "state.json"
+    if not state_file.is_file():
+        return None, None
+    try:
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return None, str(error)
+    if not isinstance(state, dict):
+        return None, "state.json is not a JSON object"
+    return state, None
+
+
+@app.command(rich_help_panel="Start here")
+def doctor(
+    directory: DirOption = DEFAULT_DIR,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """Verify the local build and assessment workspace without network access."""
+    checks: list[dict[str, str]] = []
+
+    python_ok = sys.version_info >= (3, 11)
+    checks.append(
+        {
+            "name": "python runtime",
+            "status": "PASS" if python_ok else "FAIL",
+            "detail": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        }
+    )
+    checks.append(
+        {
+            "name": "module registry",
+            "status": "PASS" if REGISTRY else "FAIL",
+            "detail": f"{len(REGISTRY)} modules loaded",
+        }
+    )
+
+    state, state_error = _read_state(directory)
+    if state_error:
+        checks.append({"name": "assessment state", "status": "FAIL", "detail": state_error})
+    elif state is None:
+        checks.append(
+            {
+                "name": "assessment state",
+                "status": "READY",
+                "detail": "not initialized; run mcpbait init",
+            }
+        )
+    else:
+        workspace = Path(str(state.get("workspace", "")))
+        workspace_ok = workspace.is_dir() and all(
+            (workspace / filename).is_file() for filename in WORKSPACE_MANIFEST
+        )
+        checks.append(
+            {
+                "name": "assessment state",
+                "status": "PASS" if workspace_ok else "FAIL",
+                "detail": "private decoy workspace is ready"
+                if workspace_ok
+                else "workspace is missing or incomplete",
+            }
+        )
+
+    checks.append(
+        {
+            "name": "doctor boundary",
+            "status": "PASS",
+            "detail": "0 targets · 0 external services · network not accessed",
+        }
+    )
+    payload = {
+        "version": __version__,
+        "directory": str(directory),
+        "healthy": not any(check["status"] == "FAIL" for check in checks),
+        "network": "not accessed",
+        "checks": checks,
+    }
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+    else:
+        from rich.table import Table
+
+        table = Table(title=f"mcpbait {__version__} doctor", show_header=True)
+        table.add_column("status", no_wrap=True)
+        table.add_column("check", no_wrap=True)
+        table.add_column("detail")
+        for check in checks:
+            table.add_row(check["status"], check["name"], check["detail"])
+        Console().print(table)
+    if not payload["healthy"]:
+        raise typer.Exit(code=1)
+
+
+@app.command(rich_help_panel="Start here")
+def status(
+    directory: DirOption = DEFAULT_DIR,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """Show assessment progress, latest evidence, and the next command."""
+    state, state_error = _read_state(directory)
+    sessions_dir = directory / "sessions"
+    latest = latest_session(sessions_dir)
+
+    payload: dict[str, Any] = {
+        "version": __version__,
+        "directory": str(directory),
+        "network": "not accessed",
+        "initialized": state is not None,
+        "workspace": "not initialized",
+        "sessions": len(list(sessions_dir.glob("*.jsonl"))) if sessions_dir.is_dir() else 0,
+        "latest_session": None,
+        "score": None,
+        "next": "mcpbait init",
+    }
+    if state_error:
+        payload["error"] = state_error
+        payload["next"] = "repair or recreate state.json"
+    elif state is not None:
+        workspace = Path(str(state.get("workspace", "")))
+        payload["workspace"] = "ready" if workspace.is_dir() else "missing"
+        payload["next"] = "mcpbait install --client <client>"
+
+    if latest is not None:
+        session = load_session(latest, modules=get_modules(None))
+        payload["latest_session"] = session.id
+        payload["score"] = session.score()
+        payload["next"] = "mcpbait report"
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    console = Console()
+    console.print(f"[bold]MCPBAIT STATUS[/bold]  [dim]v{__version__} · read-only[/dim]")
+    console.print(f"State       {'ready' if payload['initialized'] else 'not initialized'}")
+    console.print(f"Workspace   {payload['workspace']}")
+    console.print(f"Sessions    {payload['sessions']}")
+    if payload["latest_session"]:
+        console.print(f"Latest      {payload['latest_session']} · score {payload['score']}/10")
+    if state_error:
+        console.print(f"[red]Error       {state_error}[/red]")
+    console.print("Network     not accessed")
+    console.print(f"[cyan]Next        {payload['next']}[/cyan]")
+
+
+@app.command(rich_help_panel="Client setup")
 def init(
     directory: DirOption = DEFAULT_DIR,
     workspace_path: Annotated[
@@ -147,7 +297,7 @@ def init(
     console.print("Every credential in it is synthetic. Next: [bold]mcpbait config[/bold]")
 
 
-@app.command()
+@app.command(rich_help_panel="Client setup")
 def config(
     directory: DirOption = DEFAULT_DIR,
     name: Annotated[
@@ -181,7 +331,7 @@ def config(
     typer.echo(json.dumps({"mcpServers": {name: entry}}, indent=2))
 
 
-@app.command()
+@app.command(rich_help_panel="Client setup")
 def install(
     client: Annotated[
         str,
@@ -228,7 +378,7 @@ def install(
     )
 
 
-@app.command()
+@app.command(rich_help_panel="Client setup")
 def uninstall(
     client: Annotated[
         str,
@@ -263,7 +413,7 @@ def uninstall(
     Console().print(f"[green]Removed server '{name}' from {client} configuration:[/green] {target}")
 
 
-@app.command()
+@app.command(rich_help_panel="Evidence and reports")
 def badge(
     directory: DirOption = DEFAULT_DIR,
     session_id: Annotated[str | None, typer.Option("--session", help="Session id.")] = None,
@@ -301,7 +451,7 @@ def badge(
     )
 
 
-@app.command()
+@app.command(rich_help_panel="Advanced")
 def modules() -> None:
     """List the attack modules this build ships."""
     from rich.table import Table
@@ -317,7 +467,7 @@ def modules() -> None:
     Console().print(table)
 
 
-@app.command()
+@app.command(rich_help_panel="Advanced")
 def serve(
     directory: DirOption = DEFAULT_DIR,
     module_ids: Annotated[
@@ -380,7 +530,7 @@ def serve(
         session.close()
 
 
-@app.command()
+@app.command(rich_help_panel="Start here")
 def demo(
     directory: Annotated[
         Path | None, typer.Option("--dir", help="Where to run. Default: a temp directory.")
@@ -391,13 +541,17 @@ def demo(
         typer.Option("--modules", help="Comma-separated module ids. Default: all."),
     ] = None,
 ) -> None:
-    """Run the whole kill chain against a built-in defenceless agent. No setup needed."""
+    """Run a safe reference assessment and render its verified evidence."""
     selected = _select(module_ids)
     console = Console()
     root = Path(directory) if directory else Path(tempfile.mkdtemp(prefix="mcpbait-demo-"))
     try:
         canaries = mint_set()
         workspace = create_workspace(root / "workspace", canaries)
+        atomic_write_text(
+            root / "state.json",
+            json.dumps({"canaries": canaries, "workspace": str(workspace)}, indent=2),
+        )
         beacon = Beacon(on_hit=lambda path, params: None)
         ctx = PayloadContext(canaries=canaries, workspace=workspace, beacon_url=beacon.start())
         session = Session(root / "sessions", modules=get_modules(selected), ctx=ctx)
@@ -418,7 +572,7 @@ def demo(
             shutil.rmtree(root, ignore_errors=True)
 
 
-@app.command()
+@app.command(name="assess", rich_help_panel="Live assessments")
 def attack(
     directory: DirOption = DEFAULT_DIR,
     model: Annotated[str, typer.Option("--model", help="Model id to test.")] = "gpt-4o-mini",
@@ -452,7 +606,7 @@ def attack(
         typer.Option("--fail-under", help="Exit 3 if the worst-case score is below this."),
     ] = None,
 ) -> None:
-    """Attack a real LLM over repeated runs and report the spread.
+    """Assess a configured model over repeated runs and report the spread.
 
     One run against a non-deterministic model is an anecdote. This repeats the session
     and reports how often each technique landed, leading with the worst outcome seen.
@@ -557,7 +711,12 @@ def attack(
         raise typer.Exit(code=3)
 
 
-@app.command()
+# Compatibility alias for pre-0.4 automation. It remains callable but no longer
+# dominates the public help screen with unnecessarily combative terminology.
+app.command(name="attack", hidden=True)(attack)
+
+
+@app.command(rich_help_panel="Evidence and reports")
 def report(
     directory: DirOption = DEFAULT_DIR,
     session_id: Annotated[str | None, typer.Option("--session", help="Session id.")] = None,
@@ -601,7 +760,7 @@ def report(
         raise typer.Exit(code=3)
 
 
-@app.command(name="matrix")
+@app.command(name="matrix", rich_help_panel="Live assessments")
 def matrix(
     directory: DirOption = DEFAULT_DIR,
     models: Annotated[

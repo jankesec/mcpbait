@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-06
+
+### Added
+
+- `mcpbait doctor` verifies the Python runtime, compiled module registry, assessment
+  workspace, and zero-network diagnostic boundary in terminal or JSON form.
+- `mcpbait status` summarizes initialization, workspace readiness, session count, latest
+  score, and the exact next command without changing assessment state.
+- The CLI help screen now groups commands by operator intent: Start here, Client setup,
+  Evidence and reports, Advanced, and Live assessments.
+
+### Changed
+
+- `mcpbait assess` is now the preferred name for repeated live-model assessments. The
+  previous `attack` command remains as a hidden compatibility alias.
+- Reference runs kept with `demo --dir` now include `state.json`, making the result a
+  complete workspace that `status` and `report` can consume directly.
+- The reference report, README, launch kit, and terminal recording now explain one
+  coherent workflow from diagnosis through retained evidence and reporting.
+- Tag workflows now publish a checksummed GitHub release and SBOM after the tested wheel
+  reaches PyPI.
+
 ## [0.3.0] - 2026-11-05
 
 ### Fixed
@@ -125,6 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the payload, so the vocabulary stops at IGNORED rather than claiming a refusal.
 
 [Unreleased]: https://github.com/jankesec/mcpbait/compare/v0.3.0...HEAD
+[0.4.0]: https://github.com/jankesec/mcpbait/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jankesec/mcpbait/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jankesec/mcpbait/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jankesec/mcpbait/releases/tag/v0.1.0

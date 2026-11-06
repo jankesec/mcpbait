@@ -125,7 +125,7 @@ uvx mcpbait demo
 
 Or test local models over an OpenAI-compatible endpoint:
 ```bash
-mcpbait attack --api-base http://localhost:11434/v1 --model llama3.3:70b
+mcpbait assess --api-base http://localhost:11434/v1 --model llama3.3:70b
 ```
 
 Check out the repo and let us know what models you'd like to see benchmarked in the leaderboard!
