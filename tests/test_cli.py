@@ -51,6 +51,44 @@ def test_modules_lists_every_registered_module():
         assert module_id in result.output
 
 
+def test_doctor_is_read_only_and_explains_the_uninitialized_state(tmp_path):
+    target = tmp_path / ".mcpbait"
+    result = runner.invoke(app, ["doctor", "--dir", str(target)])
+    assert result.exit_code == 0, result.output
+    assert "0 targets" in result.output
+    assert "not initialized" in result.output
+    assert not target.exists()
+
+
+def test_doctor_json_reports_a_ready_workspace(tmp_path):
+    target = tmp_path / ".mcpbait"
+    runner.invoke(app, ["init", "--dir", str(target)])
+    result = runner.invoke(app, ["doctor", "--dir", str(target), "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["healthy"] is True
+    assert payload["network"] == "not accessed"
+    assert any(check["name"] == "assessment state" for check in payload["checks"])
+
+
+def test_status_guides_the_operator_through_the_workflow(tmp_path):
+    target = tmp_path / ".mcpbait"
+    before = runner.invoke(app, ["status", "--dir", str(target)])
+    assert before.exit_code == 0
+    assert "mcpbait init" in before.output
+
+    runner.invoke(app, ["init", "--dir", str(target)])
+    ready = runner.invoke(app, ["status", "--dir", str(target)])
+    assert "mcpbait install" in ready.output
+
+    runner.invoke(app, ["demo", "--dir", str(target)])
+    complete = runner.invoke(app, ["status", "--dir", str(target), "--json"])
+    payload = json.loads(complete.output)
+    assert payload["sessions"] == 1
+    assert payload["latest_session"]
+    assert payload["next"] == "mcpbait report"
+
+
 def test_report_without_a_session_exits_cleanly(tmp_path):
     result = runner.invoke(app, ["report", "--dir", str(tmp_path / ".mcpbait")])
     assert result.exit_code == 1
@@ -153,6 +191,8 @@ def test_demo_keeps_an_explicit_directory_with_its_evidence(tmp_path):
     logs = list((target / "sessions").glob("*.jsonl"))
     assert len(logs) == 1
     assert "canary_hit" in logs[0].read_text()
+    state = json.loads((target / "state.json").read_text())
+    assert state["workspace"] == str(target / "workspace")
 
 
 def test_demo_can_run_a_single_technique():
@@ -422,6 +462,16 @@ def test_version_flag_prints_the_version_and_exits_clean():
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
     assert __version__ in result.stdout
+
+
+def test_help_groups_the_operator_workflow_and_prefers_assess():
+    result = runner.invoke(app, ["--help"])
+    assert result.exit_code == 0
+    assert "Start here" in result.output
+    assert "Client setup" in result.output
+    assert "Evidence and reports" in result.output
+    assert "assess" in result.output
+    assert "│ attack " not in result.output
 
 
 # --- install / uninstall -------------------------------------------------------

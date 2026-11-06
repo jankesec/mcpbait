@@ -262,9 +262,10 @@ def print_demo_report(session: Session, console: Console | None = None) -> None:
     )
     console.print(
         "[bold]Test your own client[/bold]\n"
-        "  1  mcpbait init\n"
-        "  2  mcpbait config\n"
-        "  3  mcpbait report --html assessment.html\n"
+        "  1  mcpbait doctor\n"
+        "  2  mcpbait init && mcpbait install --client <client>\n"
+        "  3  mcpbait status\n"
+        "  4  mcpbait report --html assessment.html\n"
         "[dim]No observed action is not proof that a model evaluated and refused a payload.[/dim]"
     )
 

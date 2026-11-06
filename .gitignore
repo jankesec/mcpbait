@@ -8,6 +8,7 @@ build/
 .pytest_cache/
 .ruff_cache/
 .mcpbait/
+.demo/
 
 # Internal working documents, kept locally
 docs/superpowers/

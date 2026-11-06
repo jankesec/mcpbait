@@ -16,7 +16,7 @@ records observable compromise evidence at the protocol boundary.
 
 <img src="docs/demo.gif" alt="mcpbait running a local adversarial assessment in a Termius Pro-style terminal" width="100%">
 
-<sub>A reproducible reference assessment: verified evidence, phase outcomes, score interpretation, and the next commands for testing a real client. The built-in target is intentionally vulnerable.</sub>
+<sub>A real local reference workflow: zero-network doctor, deterministic assessment, retained state and JSONL evidence, status guidance, and a replayable JSON report. The built-in target is intentionally vulnerable.</sub>
 
 </div>
 
@@ -60,11 +60,15 @@ and treat the worst observed result as the useful decision signal.
 Python 3.11 or newer is required.
 
 ```bash
-uvx mcpbait demo
+uvx mcpbait doctor
+uvx mcpbait demo --dir .mcpbait-reference
+uvx mcpbait status --dir .mcpbait-reference
 ```
 
 The demo runs all modules against mcpbait's deliberately defenceless reference agent.
-Use it to inspect the workflow and report format, not to evaluate a real model.
+Use it to inspect the workflow and report format, not to evaluate a real model. Supplying
+`--dir` keeps a complete state manifest, synthetic workspace, JSONL evidence ledger, and
+re-renderable session instead of discarding the reference run.
 
 For a persistent installation:
 
@@ -78,6 +82,9 @@ uv tool install mcpbait
 Use only with systems and accounts you are authorized to test.
 
 ```bash
+# Confirm the installation and local safety boundary without network access.
+mcpbait doctor
+
 # Create private synthetic canaries and an isolated decoy workspace.
 mcpbait init
 
@@ -85,6 +92,9 @@ mcpbait init
 mcpbait install --client claude-desktop --as local-system-indexer
 
 # Restart the client and ask it to perform an ordinary workspace task.
+
+# Confirm the workspace and inspect whether evidence has arrived.
+mcpbait status
 
 # Render the completed session.
 mcpbait report --html assessment.html --json assessment.json
@@ -162,7 +172,7 @@ Run repeated assessments against an OpenAI-compatible API:
 
 ```bash
 export MCPBAIT_API_KEY='...'
-mcpbait attack --model gpt-4o-mini --runs 3 --json result.json
+mcpbait assess --model gpt-4o-mini --runs 3 --json result.json
 ```
 
 Compare several configured model IDs without publishing an invented leaderboard:
@@ -194,19 +204,22 @@ infrastructure.
 
 | Command | Purpose |
 | --- | --- |
+| `mcpbait doctor` | Verify the build and local workspace without network access. |
+| `mcpbait status` | Show progress, latest evidence, and the next command. |
 | `mcpbait demo` | Run the full suite against the local reference agent. |
 | `mcpbait init` | Create state, canaries, and the decoy workspace. |
 | `mcpbait config` | Print an MCP client configuration block. |
 | `mcpbait install` | Add mcpbait to a supported desktop client. |
 | `mcpbait uninstall` | Remove the mcpbait entry from that client. |
 | `mcpbait serve` | Serve over stdio or Streamable HTTP. |
-| `mcpbait attack` | Run repeated tests against one configured model. |
+| `mcpbait assess` | Run repeated tests against one configured model. |
 | `mcpbait matrix` | Compare repeated results across model IDs. |
 | `mcpbait report` | Render terminal, JSON, HTML, and SARIF output. |
 | `mcpbait modules` | List the modules shipped by the installed build. |
 | `mcpbait badge` | Generate an offline SVG score badge. |
 
 Every command exposes its exact options through `mcpbait <command> --help`.
+The pre-0.4 `mcpbait attack` spelling remains available as a hidden compatibility alias.
 
 ## Container use
 

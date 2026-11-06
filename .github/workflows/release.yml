@@ -81,3 +81,30 @@ jobs:
           # Explicit rather than inherited: the artifact ships with a signed
           # provenance attestation tying it to this workflow and this tag.
           attestations: true
+
+  github-release:
+    needs: [test, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+        with:
+          name: dist
+          path: dist/
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+        with:
+          name: sbom
+          path: release/
+      - name: Create checksum manifest
+        run: sha256sum dist/* release/sbom.json > release/checksums.txt
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME"
+          dist/* release/sbom.json release/checksums.txt
+          --verify-tag
+          --title "mcpbait $GITHUB_REF_NAME"
+          --notes-file RELEASE_NOTES.md
