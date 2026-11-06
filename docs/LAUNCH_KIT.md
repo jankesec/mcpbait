@@ -78,7 +78,7 @@ https://github.com/jankesec/mcpbait/blob/main/docs/LEADERBOARD.md
 ```markdown
 **GitHub Repository:** https://github.com/jankesec/mcpbait  
 **PyPI:** `pip install mcpbait` / `uvx mcpbait`  
-**License:** Apache 2.0
+**License:** MIT
 
 ### Summary
 As Model Context Protocol (MCP) adoption grows across developer tools and enterprise workflows, agent compromise via untrusted MCP servers has become a critical threat vector. 

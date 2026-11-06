@@ -9,7 +9,7 @@
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/jankesec/mcpbait/codeql.yml?branch=main&style=flat-square&label=CodeQL)](https://github.com/jankesec/mcpbait/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/jankesec/mcpbait/badge)](https://scorecard.dev/viewer/?uri=github.com/jankesec/mcpbait)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-111?style=flat-square&logo=python)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-Apache--2.0-111?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-111?style=flat-square)](LICENSE)
 
 mcpbait acts as a hostile MCP server, presents adversarial tools to an agent, and
 records observable compromise evidence at the protocol boundary.
@@ -268,4 +268,4 @@ remove client configuration when the assessment is complete.
 
 ## License
 
-Apache License 2.0. See [`LICENSE`](LICENSE).
+MIT License. See [`LICENSE`](LICENSE).
