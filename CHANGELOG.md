@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-06
+
+### Changed
+
+- Updated checkout, artifact upload/download, Python setup, uv setup, and CodeQL actions
+  to their Node 24-compatible major releases while retaining immutable commit pins.
+- Consolidated and superseded the six stale Dependabot pull requests left from the
+  previous workflow baseline.
+
 ## [0.4.0] - 2026-11-06
 
 ### Added
@@ -154,7 +163,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server side: a model that silently declined is indistinguishable from one that never saw
   the payload, so the vocabulary stops at IGNORED rather than claiming a refusal.
 
-[Unreleased]: https://github.com/jankesec/mcpbait/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/jankesec/mcpbait/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/jankesec/mcpbait/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/jankesec/mcpbait/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jankesec/mcpbait/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jankesec/mcpbait/compare/v0.1.0...v0.2.0

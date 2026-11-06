@@ -1,7 +1,7 @@
-## mcpbait v0.4.0
+## mcpbait v0.4.1
 
-This release turns the command set into a guided assessment workflow while preserving
-all existing automation.
+This release includes the guided assessment workflow from v0.4.0 and refreshes the
+GitHub Actions baseline to Node 24-compatible, immutable pins.
 
 ### Operator workflow
 
